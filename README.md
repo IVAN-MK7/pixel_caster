@@ -1,5 +1,7 @@
 # pixel_caster
 
+[![](https://img.shields.io/crates/v/pixel_caster.svg)](https://crates.io/crates/pixel_caster)
+
 Get from, and send to, the screen RGBA values in bytes (8 bit unsigned integers, u8) to read or manipulate pixels.
 
 ## Examples
