@@ -10,7 +10,7 @@ Get from, and send to, the screen RGBA values in bytes (8 bit unsigned integers,
 cargo run --example
 ```
 
-# Get bytes
+## Get bytes
 
 Example for "\examples\get_pixels_bytes.rs" :
 
@@ -23,7 +23,7 @@ The get_bytes function will return a Vec<u8> containing the bytes read from the 
 <img src="media/example-get_pixels_bytes.png">
 
 
-# Send bytes
+## Send bytes
 
 Example for "\examples\send_pixel_bytes.rs" :
 
@@ -36,7 +36,7 @@ The send_bytes function will send a Vec<u8> containing the bytes to be applied t
 <img src="media/example-send_pixel_bytes.png">
 
 
-# Clone pixels
+## Clone pixels
 
 Example for "\examples\clone_pixels_on_screen.rs" :
 
