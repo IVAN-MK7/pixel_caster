@@ -1,6 +1,6 @@
 [package]
 name = "pixel_caster"
-description = "Cast pixels to and from screen by working with their RGB values"
+description = "Cast pixels to and from screen by managing with their RGB values"
 keywords = ["screen", "cast", "retrieve", "pixel", "RGB"]
 version = "0.1.0"
 edition = "2021"
