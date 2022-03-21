@@ -9,7 +9,6 @@ repository = "https://github.com/IVAN-MK7/pixel_caster/"
 readme = "README.md"
 categories = ["os::windows-apis"]
 license = "MIT"
-license-file = "LICENSE-MIT"
 
 [lib]
 name = "pixel_caster"
