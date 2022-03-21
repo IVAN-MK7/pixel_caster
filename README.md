@@ -50,3 +50,8 @@ The copy_and_paste_pixels function will copy the pixels from a given area of the
 
 
 Works only on Windows OS, starting from Windows 2000
+
+
+## License
+
+- [MIT license](http://opensource.org/licenses/MIT)
