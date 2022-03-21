@@ -47,3 +47,6 @@ cargo run --example clone_pixels_on_screen
 The copy_and_paste_pixels function will copy the pixels from a given area of the screen and pastes them into another a given area of the screen
 
 <img src="media/example-clone_pixels_on_screen.png">
+
+
+Works only on Windows OS, starting from Windows 2000
