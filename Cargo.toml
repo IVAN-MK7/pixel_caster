@@ -1,0 +1,40 @@
+[package]
+name = "pixel_caster"
+description = "Cast pixels to and from screen by working with their RGB values"
+keywords = ["screen", "cast", "retrieve", "pixel", "RGB"]
+version = "0.1.0"
+edition = "2021"
+authors = ["IVAN MK7 <ivan@mk7.tech>"]
+repository = "https://github.com/IVAN-MK7/pixel_caster/"
+readme = "README.md"
+categories = ["os::windows-apis"]
+license = "MIT"
+license-file = "LICENSE-MIT"
+
+[lib]
+name = "pixel_caster"
+path = "src/lib.rs"
+
+[[example]]
+name = "get_pixels_bytes"
+path = "examples/get_pixels_bytes.rs"
+
+[[example]]
+name = "send_pixel_bytes"
+path = "examples/send_pixel_bytes.rs"
+
+[[example]]
+name = "clone_pixels_on_screen"
+path = "examples/clone_pixels_on_screen.rs"
+
+[dependencies]
+libc = "0.2.121"
+
+[dependencies.windows]
+version = "0.34.0"
+
+features = [
+    "Win32_Graphics",
+    "Win32_Graphics_Gdi",
+    "Win32_Foundation",
+]
