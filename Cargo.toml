@@ -1,7 +1,7 @@
 [package]
 name = "pixel_caster"
 description = "Cast pixels to and from the screen by managing their RGBA values"
-keywords = ["screen", "cast", "retrieve", "pixel", "RGB"]
+keywords = ["screen", "cast", "retrieve", "pixel", "RGBA"]
 version = "0.2.0"
 edition = "2021"
 authors = ["IVAN MK7 <ivan@mk7.tech>"]
