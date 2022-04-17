@@ -1,8 +1,8 @@
 [package]
 name = "pixel_caster"
-description = "Cast pixels to and from the screen by managing their RGB values"
+description = "Cast pixels to and from the screen by managing their RGBA values"
 keywords = ["screen", "cast", "retrieve", "pixel", "RGB"]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["IVAN MK7 <ivan@mk7.tech>"]
 repository = "https://github.com/IVAN-MK7/pixel_caster/"
