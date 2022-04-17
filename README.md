@@ -20,7 +20,7 @@ Example for "\examples\get_pixels_bytes.rs" :
 cargo run --example get_pixels_bytes
 ```
 
-The get_bytes function will return a Vec<u8> containing the bytes red from the pixels of a screen area of the requested size, starting from an absolute position on the screen.
+The get_bytes function will return a Vec containing the bytes red from the pixels of a screen area of the requested size, starting from an absolute position on the screen.
 
 <img src="media/example-get_pixels_bytes.png">
 
@@ -33,7 +33,7 @@ Example for "\examples\send_bytes_to_pixels.rs" :
 cargo run --example send_bytes_to_pixels
 ```
 
-The send_bytes_bgra function will send a Vec<u8> containing the bytes to be applied the pixels of a screen area of the requested size, starting from an absolute position on the screen. The Alpha value (Blue Green Red Alpha), which represents the transparency of the resulting color (from the combination of the B G R values) is supported, an Alpha value for every BGR value in the Vec<u8>, that overrides their own Alpha value can also be set, in order to change the opacity of every BGR to be sent to the screen. In this example the Vec<u8> will contain 64 bytes representing a qube of 4 x 4 (16) pixels, where the first 2 will be red, the other 14 blue (for this example in the Vec<u8> each Alpha value has been set to 255, for max opacity) :
+The send_bytes_bgra function will send a Vec, either of u8 or u32 values, containing the bytes to be applied the pixels of a screen area of the requested size, starting from an absolute position on the screen. The Alpha value (Blue Green Red Alpha), which represents the transparency of the resulting color (from the combination of the B G R values) is supported, an Alpha value for every BGR value in the Vec, that overrides their own Alpha value can also be set, in order to change the opacity of every BGR to be sent to the screen. In this example the Vec will contain 64 bytes representing a qube of 4 x 4 (16) pixels, where the first 2 will be red, the other 14 blue (for this example in the Vec each Alpha value has been set to 255, for max opacity) :
 
 <img src="media/example-send_bytes_to_pixels.png">
 
