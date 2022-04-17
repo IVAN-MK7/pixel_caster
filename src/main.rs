@@ -2,7 +2,6 @@ pub use pixel_caster::*;
 
 /// main() will just get and send some bytes to verify that the screen reacts to the new values
 fn main() {
-
     println!("");
     println!("Just playing with some pixels, to verify that the screen reacts to the new values (check the top-left corner)");
 
@@ -42,16 +41,27 @@ fn main() {
     vec.extend_from_slice(&[255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255]);
     vec.extend_from_slice(&[255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255]);*/
 
+    // send the bytes to the pixels of the requested size of an absolute position on the screen,
+    // makes completery transparent those whites (obtained by R: 255, G: 255, B: 255) that are being sent to the screen's pixels
+    send_bytes_bgra_hide_specific_bgr(
+        &mut vec,
+        &pixels_width,
+        &pixels_height,
+        &(screen_destination_area_upperleftcorner_x + 220), 
+        &screen_destination_area_upperleftcorner_y,
+        bgra_to_u32_abgr(255, 255, 255, 0));
+    
+    // sets every BGRA's opacity (Alpha value, range : 0-255), set it to 255 in order to use per-pixel alpha values
+    let source_constant_alpha = 200;
     // send the bytes to the pixels of the requested size of an absolute position on the screen
-    send_bytes(
+    send_bytes_bgra(
         &mut vec,
         &pixels_width,
         &pixels_height,
         &screen_destination_area_upperleftcorner_x, 
-        &screen_destination_area_upperleftcorner_y
+        &screen_destination_area_upperleftcorner_y,
+        source_constant_alpha
     );
-
-
 }
 // based on
 // https://stackoverflow.com/questions/33669344/bitblt-captures-only-partial-screen

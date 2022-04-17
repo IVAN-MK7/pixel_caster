@@ -9,12 +9,16 @@ fn main (){
     /* Vec for testing : a qube of 4 x 4 (16) pixels, where the first 2 will be red, the other 14 blue*/
     let mut vec:Vec<u8> = Vec::with_capacity(4 * 4 * 4);
     // each byte (u8) has a range of 0-255, they are ordered by BGRA instead of RGBA
-    vec.extend_from_slice(&[0,0,255,255,0,0,255,255]); // 2 RED pixels
+    //                      B G   R   A
+    vec.extend_from_slice(&[0,0,255,255]); // 1 RED pixel
+    vec.extend_from_slice(&[0,0,255,255]); // 1 RED pixel
     vec.extend_from_slice(&[255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255]); // 7 BLUE pixels
     vec.extend_from_slice(&[255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255]); // 7 BLUE pixels
 
     // send the bytes to the pixels of the requested size of an absolute position on the screen
-    send_bytes(
+    // for each pixel the Alpha value was set to 255, but it could be any value, since with the following function
+    // every pixel will have Alpha automatically set to 255
+    send_bytes_bgra_maxalpha(
         &mut vec,
         &pixels_area_width,
         &pixels_area_height,

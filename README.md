@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/crates/v/pixel_caster.svg)](https://crates.io/crates/pixel_caster)
 
-Get from, and send to, the screen RGBA values in bytes (8 bit unsigned integers, u8) to read or manipulate pixels.
+Get from, and send to, the screen BGRA values in bytes (8 bit unsigned integers, u8) to read or manipulate pixels.
 
 ## Examples
 
@@ -27,16 +27,17 @@ The get_bytes function will return a Vec<u8> containing the bytes red from the p
 
 ## Send bytes
 
-Example for "\examples\send_pixel_bytes.rs" :
+Example for "\examples\send_bytes_to_pixels.rs" :
 
 ``` powershell
-cargo run --example send_pixel_bytes
+cargo run --example send_bytes_to_pixels
 ```
 
-The send_bytes function will send a Vec<u8> containing the bytes to be applied the pixels of a screen area of the requested size, starting from an absolute position on the screen. In this example the Vec<u8> will contain 64 bytes representing a qube of 4 x 4 (16) pixels, where the first 2 will be red, the other 14 blue :
+The send_bytes_bgra function will send a Vec<u8> containing the bytes to be applied the pixels of a screen area of the requested size, starting from an absolute position on the screen. The Alpha value (Blue Green Red Alpha), which represents the transparency of the resulting color (from the combination of the B G R values) is supported, an Alpha value for every BGR value in the Vec<u8>, that overrides their own Alpha value can also be set, in order to change the opacity of every BGR to be sent to the screen. In this example the Vec<u8> will contain 64 bytes representing a qube of 4 x 4 (16) pixels, where the first 2 will be red, the other 14 blue (for this example in the Vec<u8> each Alpha value has been set to 255, for max opacity) :
 
-<img src="media/example-send_pixel_bytes.png">
+<img src="media/example-send_bytes_to_pixels.png">
 
+There are also provided other functions, such as one that automatically maxes out the Alpha value of every BGRA to be sent to screen, to maximise opacity, and another that sets the Alpha of an RGB combination to 0 so that, for example, when a white (obtained by R: 255, G: 255, B: 255) is being sent to the screen, it becomes completely transparent
 
 ## Clone pixels
 

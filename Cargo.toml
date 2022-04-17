@@ -19,8 +19,8 @@ name = "get_pixels_bytes"
 path = "examples/get_pixels_bytes.rs"
 
 [[example]]
-name = "send_pixel_bytes"
-path = "examples/send_pixel_bytes.rs"
+name = "send_bytes_to_pixels"
+path = "examples/send_bytes_to_pixels.rs"
 
 [[example]]
 name = "clone_pixels_on_screen"
@@ -30,10 +30,12 @@ path = "examples/clone_pixels_on_screen.rs"
 libc = "0.2.121"
 
 [dependencies.windows]
-version = "0.34.0"
+version = "0.35.0"
 
 features = [
+    "alloc",
     "Win32_Graphics",
     "Win32_Graphics_Gdi",
     "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
 ]
