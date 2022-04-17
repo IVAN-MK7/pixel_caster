@@ -649,7 +649,84 @@ pub fn send_bytes_bgra<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, 
         DeleteObject(hbmp_from_bytes);
     }
 }
+/// same as send_bytes_bgra but source_constant_alpha is set to 255 by default
+pub fn send_bytes<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32) {
+    unsafe {
+        //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
+        
+        // create HBITMAP from a BGRA color pattern sequence array
+        let hbmp_from_bytes = CreateBitmap(
+            req_width.to_owned(),
+            req_height.to_owned(),
+            1,
+            // B        G        R        A
+            // 0-255    0-255    0-255    0-255
+            // 2^8 = 256 , so 8 bits are required to represent a color's range of values
+            // so each one of the colors is represented by an unsigned 8 bit integer (u8)
 
+            // a single pixel is formed by BGRA (Blue,Green,Red,Alpha)
+            // the combination of their values gives the resulting color to a pixel
+            // the range of each of their values : 0-255 (so : 0-255,0-255,0-255,0-255)
+            // all 255 results in a black pixel, all 0 in a white pixel, 255,0,0,255 in a blue one
+            // to represent values of range : 0-255 are necessary 8 bits ( 2^8 = 256 ), so the following bitcount must be 32
+            // because 8+8+8+8 = 32, 32 bits are necessary to represent a pixel's combination of B,G,R,A
+            32,
+            // uses BGRA format instead of RGBA
+            // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
+            vec.as_mut_ptr() as *mut c_void
+            //&vec as *const Vec<u8> as *mut c_void
+        );
+        
+        // get a handle (H) of a memory device context (DC) from which capture data (pixels)
+        let dc_src = CreateCompatibleDC(None);
+    
+        let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes);
+        
+        // get a handle (H) to a device context (DC) for the client area,
+        // in this case for the entire virtual screen (not just a monitor),
+        // instead of a window (from hwnd value)
+        
+        // get a handle (H) of a memory device context (DC) to which send data (pixels/BGRA colors)
+        let screen = GetDC(None);
+
+        let pixels_upperleftcorner_x = 0;
+        let pixels_upperleftcorner_y = 0;
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-blendfunction
+        let bf = BLENDFUNCTION {
+            BlendOp : AC_SRC_OVER as u8,
+            BlendFlags : 1,
+            // Set the SourceConstantAlpha value to 255 (opaque) when you only want to use per-pixel alpha values
+            SourceConstantAlpha : 255,
+            AlphaFormat : AC_SRC_ALPHA as u8
+        };
+
+        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-alphablend
+        AlphaBlend(
+            screen.to_owned(),
+            dst_ul_x.to_owned(),
+            dst_ul_y.to_owned(),
+            req_width.to_owned(),
+            req_height.to_owned(),
+            dc_src.to_owned(),
+            pixels_upperleftcorner_x.to_owned(),
+            pixels_upperleftcorner_y.to_owned(),
+            req_width.to_owned(),
+            req_height.to_owned(),
+            bf
+          );
+        
+        //std::mem::forget(vec);
+
+        ReleaseDC(None, screen);
+        // This function returns the previously selected object of the specified type.
+        // An application should always replace a new object with the original,
+        // default object after it has finished drawing with the new object.
+        SelectObject(dc_src, hbmp_replace);
+        DeleteDC(dc_src);
+        DeleteObject(hbmp_from_bytes);
+    }
+}
 /// Copies the pixels from a given area of the screen and pastes them into another given area of the screen.
 pub fn copy_and_paste_pixels(req_width :&i32, req_height :&i32, src_ul_x :&i32, src_ul_y :&i32, dst_ul_x :&i32, dst_ul_y :&i32) {
     unsafe {
