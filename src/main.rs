@@ -44,7 +44,7 @@ fn main() {
     // send the bytes to the pixels of the requested size of an absolute position on the screen,
     // makes completery transparent those whites (obtained by R: 255, G: 255, B: 255) that are being sent to the screen's pixels
     send_bytes_bgra_hide_specific_bgr(
-        &mut vec,
+        &vec,
         &pixels_width,
         &pixels_height,
         &(screen_destination_area_upperleftcorner_x + 220), 
@@ -55,7 +55,7 @@ fn main() {
     let source_constant_alpha = 200;
     // send the bytes to the pixels of the requested size of an absolute position on the screen
     send_bytes_bgra(
-        &mut vec,
+        &vec,
         &pixels_width,
         &pixels_height,
         &screen_destination_area_upperleftcorner_x, 

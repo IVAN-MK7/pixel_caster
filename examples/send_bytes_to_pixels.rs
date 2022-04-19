@@ -19,7 +19,7 @@ fn main (){
     let source_constant_alpha = 255;
     // send the bytes to the pixels of the requested size of an absolute position on the screen
     send_bytes_bgra(
-        &mut vecu8_adjusted,
+        &vecu8_adjusted,
         &pixels_area_width,
         &pixels_area_height,
         &screen_destination_area_upperleftcorner_x, 

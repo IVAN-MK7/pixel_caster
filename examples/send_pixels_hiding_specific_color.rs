@@ -35,5 +35,5 @@ fn main() {
     let width = (bytes.len()/4) as i32;
 
     // send the Vec<u8> to the screen as an area 1pixel heigh, hide the whites (B=255 , G=255 , R=255)
-    send_bytes_bgra_hide_specific_bgr(&mut bytes, &width, &1, &44, &600, bgra_to_u32_abgr(255, 255, 255, 0));
+    send_bytes_bgra_hide_specific_bgr(&bytes, &width, &1, &44, &600, bgra_to_u32_abgr(255, 255, 255, 0));
 }

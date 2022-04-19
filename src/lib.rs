@@ -249,7 +249,7 @@ pub fn get_bytes_u32 (req_width :&i32, req_height :&i32, src_ul_x :&i32, src_ul_
 /// Sends the bytes to the pixels of a screen area of the requested size, starting from an absolute position on the screen.
 /// The bytes are sent row by row, the Alpha value in BlueGreenRedAlpha, that is used to define transparency,
 /// will be ignored, as it will be max by default (255), so every pixel will have full opacity
-pub fn send_bytes_bgra_maxalpha<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32) {
+pub fn send_bytes_bgra_maxalpha<T> (vec :&Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
         
@@ -272,7 +272,7 @@ pub fn send_bytes_bgra_maxalpha<T> (vec :&mut Vec<T>, req_width :&i32, req_heigh
             32,
             // uses BGR format instead of RGB
             // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-            vec.as_mut_ptr() as *mut c_void
+            vec.as_ptr() as *mut c_void
             //&vec as *const Vec<u8> as *mut c_void
         );
         
@@ -319,7 +319,7 @@ pub fn send_bytes_bgra_maxalpha<T> (vec :&mut Vec<T>, req_width :&i32, req_heigh
 /// and make so that if a BGRA value to be sent to a pixel matches a specific (A is ignored)BGR (u32) value
 /// that color will be sent as completely transparent
 /// e.g., every time a white (B=255, G=255, R=255, A=any_u8_value) is to be sent to a pixel it must be sent as completely transparent, invisible, hidden
-pub fn send_bytes_bgra_hide_specific_bgr<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32, abgr_u32_to_hide : u32) {
+pub fn send_bytes_bgra_hide_specific_bgr<T> (vec :&Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32, abgr_u32_to_hide : u32) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
         
@@ -342,7 +342,7 @@ pub fn send_bytes_bgra_hide_specific_bgr<T> (vec :&mut Vec<T>, req_width :&i32, 
             32,
             // uses BGR format instead of RGB
             // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-            vec.as_mut_ptr() as *mut c_void
+            vec.as_ptr() as *mut c_void
             //&vec as *const Vec<u8> as *mut c_void
         );
         
@@ -572,7 +572,7 @@ pub fn vecu8_bgra_alpha_adjust (vec :&Vec<u8>) -> Vec<u8> {
 /// send Blue Green Red Alpha values to the pixels of a defined area of the screen
 /// source_constant_alpha sets the Alpha value of every BGRA (so it sets the whole image's opacity , range : 0-255)
 /// set source_constant_alpha to 255 in order to use per-pixel alpha values
-pub fn send_bytes_bgra<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32, source_constant_alpha :u8) {
+pub fn send_bytes_bgra<T> (vec :&Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32, source_constant_alpha :u8) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
         
@@ -595,7 +595,7 @@ pub fn send_bytes_bgra<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, 
             32,
             // uses BGRA format instead of RGBA
             // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-            vec.as_mut_ptr() as *mut c_void
+            vec.as_ptr() as *mut c_void
             //&vec as *const Vec<u8> as *mut c_void
         );
         
@@ -649,8 +649,8 @@ pub fn send_bytes_bgra<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, 
         DeleteObject(hbmp_from_bytes);
     }
 }
-/// same as send_bytes_bgra but source_constant_alpha is set to 255 by default
-pub fn send_bytes<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32) {
+/// same as send_bytes_bgra_maxalpha, but faster, since alpha is completely ignored
+pub fn send_bytes<T> (vec :&Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
         
@@ -671,9 +671,9 @@ pub fn send_bytes<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, dst_u
             // to represent values of range : 0-255 are necessary 8 bits ( 2^8 = 256 ), so the following bitcount must be 32
             // because 8+8+8+8 = 32, 32 bits are necessary to represent a pixel's combination of B,G,R,A
             32,
-            // uses BGRA format instead of RGBA
+            // uses BGR format instead of RGB
             // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-            vec.as_mut_ptr() as *mut c_void
+            vec.as_ptr() as *mut c_void
             //&vec as *const Vec<u8> as *mut c_void
         );
         
@@ -686,35 +686,23 @@ pub fn send_bytes<T> (vec :&mut Vec<T>, req_width :&i32, req_height :&i32, dst_u
         // in this case for the entire virtual screen (not just a monitor),
         // instead of a window (from hwnd value)
         
-        // get a handle (H) of a memory device context (DC) to which send data (pixels/BGRA colors)
+        // get a handle (H) of a memory device context (DC) to which send data (pixels/RGB(A) colors)
         let screen = GetDC(None);
 
         let pixels_upperleftcorner_x = 0;
         let pixels_upperleftcorner_y = 0;
 
-        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-blendfunction
-        let bf = BLENDFUNCTION {
-            BlendOp : AC_SRC_OVER as u8,
-            BlendFlags : 1,
-            // Set the SourceConstantAlpha value to 255 (opaque) when you only want to use per-pixel alpha values
-            SourceConstantAlpha : 255,
-            AlphaFormat : AC_SRC_ALPHA as u8
-        };
-
-        // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-alphablend
-        AlphaBlend(
-            screen.to_owned(),
-            dst_ul_x.to_owned(),
-            dst_ul_y.to_owned(),
-            req_width.to_owned(),
-            req_height.to_owned(),
-            dc_src.to_owned(),
-            pixels_upperleftcorner_x.to_owned(),
-            pixels_upperleftcorner_y.to_owned(),
-            req_width.to_owned(),
-            req_height.to_owned(),
-            bf
-          );
+        // bit-block transfer of the color data corresponding to an area of pixels
+        // of the RGBA sequence it doesn't print the 4th value (A : alpha,opacity) so only RGB, the A won't be used
+        bitblock_transfer::to_screen(
+            &screen,
+            &dst_ul_x,
+            &dst_ul_y,
+            &req_width, &req_height,
+            &dc_src,
+            &pixels_upperleftcorner_x,
+            &pixels_upperleftcorner_y
+        );
         
         //std::mem::forget(vec);
 
