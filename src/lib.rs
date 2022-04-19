@@ -650,6 +650,7 @@ pub fn send_bytes_bgra<T> (vec :&Vec<T>, req_width :&i32, req_height :&i32, dst_
     }
 }
 /// same as send_bytes_bgra_maxalpha, but faster, since alpha is completely ignored
+/// remove <T> and set Vec to a specific type, e.g., <u8>, to make it work also for signed integers, like i32, go figure out why
 pub fn send_bytes<T> (vec :&Vec<T>, req_width :&i32, req_height :&i32, dst_ul_x :&i32, dst_ul_y :&i32) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
