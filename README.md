@@ -39,7 +39,7 @@ The send_bytes_bgra example will send a Vec, either of u8 or u32 values, contain
 
 <img src="media/example-send_bytes_to_pixels.png">
 
-There are also provided other functions, such as one that automatically maxes out the Alpha value of every BGRA to be sent to screen, to maximise opacity, and another that sets the Alpha of an RGB combination to 0 so that, for example, when a white (obtained by R: 255, G: 255, B: 255) is being sent to the screen, it becomes completely transparent
+There are also provided other functions, such as one that automatically maxes out the Alpha value of every BGRA to be sent to screen, to maximise opacity, and another that sets the Alpha of an RGB combination to 0 so that, for example, when a white (obtained by R: 255, G: 255, B: 255) is being sent to the screen, it becomes completely transparent.
 
 ## Clone pixels
 
