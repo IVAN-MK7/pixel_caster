@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/crates/v/pixel_caster.svg)](https://crates.io/crates/pixel_caster)
 
-Get from, and send to, the screen BGRA values in bytes (8 bit unsigned integers, u8) to read or manipulate pixels.
+Get from, and send to, the screen BGRA values in bytes (either 8 or 32 bit unsigned integers, u8/u32) to read or manipulate pixels.
 
 Import/export characters from/to .png files, alterate their color and transparency, create strings out of them and print them on the screen.
 
