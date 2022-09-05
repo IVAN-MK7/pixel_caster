@@ -1,6 +1,6 @@
 [package]
 name = "pixel_caster"
-description = "Cast pixels to and from the screen by managing their RGBA values"
+description = "Cast pixels to and from the screen by managing their RGBA values. Import characters from .png files"
 keywords = ["screen", "cast", "retrieve", "pixel", "RGBA"]
 version = "0.2.10"
 edition = "2021"

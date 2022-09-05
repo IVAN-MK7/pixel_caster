@@ -4,6 +4,8 @@
 
 Get from, and send to, the screen BGRA values in bytes (8 bit unsigned integers, u8) to read or manipulate pixels.
 
+Import/export characters from/to .png files, alterate their color and transparency, create strings out of them and print them on the screen.
+
 ## Examples
 
 Many examples can be found in the examples directory. Use the following command, followed by the file title, to compile and run :
