@@ -62,7 +62,7 @@ Example for "\examples\text_from_png_chars_sample_to_screen.rs" :
 cargo run --example text_from_png_chars_sample_to_screen
 ```
 
-The cargo run --example text_from_png_chars_sample_to_screen example will import the characters from 2 .png files (that differ in characters size and color) and print on the screen a string made of some of those chars, then will export the chars one-by-one into a folder, using the .png file format, finally will import all of them, create a new string and print it on the screen.
+The cargo run --example text_from_png_chars_sample_to_screen example will import the characters from 2 .png files (that differ in characters size and color) and print on the screen a string made of some of those characters, then will export them one-by-one into a folder, using the .png file format, finally will import them back, create a new string and print it on the screen.
 
 <img src="fonts/exports/transparent_green_40px_chars_sample__transparent_background.png">
 
