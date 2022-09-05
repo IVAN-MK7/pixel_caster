@@ -7,24 +7,22 @@ fn main (){
     let pixels_area_height = 4;
 
     /* Vec for testing : a qube of 4 x 4 (16) pixels, where the first 2 will be red, the other 14 blue*/
-    let mut vec :Vec<u8> = Vec::with_capacity(4 * 4 * 4);
+    let mut vec: Vec<u8> = Vec::with_capacity(pixels_area_width * pixels_area_height * 4);
     // each byte (u8) has a range of 0-255, they are ordered by BGRA instead of RGBA
     vec.extend_from_slice(&[0,0,255,255,0,0,246,245]); // 2 RED pixels
     vec.extend_from_slice(&[255,0,0,125,255,0,0,160,255,0,0,190,255,0,0,210,255,0,0,230,255,0,0,245,255,0,0,255]); // 7 BLUE pixels with various Alpha values (in order to make them differ in opacity/transparency)
     vec.extend_from_slice(&[255,0,0,0,255,0,0,125,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255]); // 7 more
 
-    let mut vecu8_adjusted = vecu8_bgra_alpha_adjust(&vec);
-    
-    // sets every BGRA's opacity (Alpha value, range : 0-255), set it to 255 in order to use per-pixel alpha values
-    let source_constant_alpha = 255;
+    // sets the BGRA sending method to AlphaEnabled in to use per-pixel alpha values
+    let pixels_send_mode = PixelsSendMode::AlphaEnabled;
     // send the bytes to the pixels of the requested size of an absolute position on the screen
-    send_bytes_bgra(
-        &vecu8_adjusted,
-        &pixels_area_width,
-        &pixels_area_height,
-        &screen_destination_area_upperleftcorner_x, 
-        &screen_destination_area_upperleftcorner_y,
-        source_constant_alpha
+    Screen::update_area_custom(
+        &vec,
+        screen_destination_area_upperleftcorner_x, 
+        screen_destination_area_upperleftcorner_y,
+        pixels_area_width as u32,
+        pixels_area_height as u32,
+        pixels_send_mode
     );
 
     println!("");
