@@ -68,7 +68,7 @@ The cargo run --example text_from_png_chars_sample_to_screen example will import
 
 <img src="fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png">
 
-<img src="media/example-text_from_png_chars_sample_to_screen_folder_of_cars.png">
+<img src="media/example-text_from_png_chars_sample_to_screen_folder_of_chars.png">
 
 <img src="media/example-text_from_png_chars_sample_to_screen.png">
 
