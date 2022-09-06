@@ -2,7 +2,7 @@
 name = "pixel_caster"
 description = "Cast pixels to and from the screen by managing their RGBA values. Import characters from .png files"
 keywords = ["screen", "cast", "retrieve", "pixel", "RGBA"]
-version = "0.2.10"
+version = "1.0.0"
 edition = "2021"
 authors = ["IVAN MK7 <ivan@mk7.tech>"]
 repository = "https://github.com/IVAN-MK7/pixel_caster/"

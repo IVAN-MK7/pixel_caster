@@ -268,7 +268,7 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     /// assert!(max_blue_full_opacity!(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3])); // asserts the macro
     /// assert!(max_blue_full_opacity(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3])); // asserts the function
     /// ```
-    /// TO DO DOCUMENTATION, example works
+    /// TO DO DOCUMENTATION, example to update
     /// # Examples
     /// 
     /// ```
@@ -310,7 +310,7 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     /// assert!(max_blue_full_opacity!(abgr_vec_slice)); // asserts the macro
     /// assert!(max_blue_full_opacity(abgr_vec_slice)); // asserts the function
     /// ```
-    /// TO DO DOCUMENTATION, example works
+    /// TO DO DOCUMENTATION, example to update
     /// # Examples
     /// 
     /// ```
@@ -321,7 +321,7 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     /// slice_max_blue_max_alpha(&mut bgra_vec[4..=7]);
     /// assert_eq!(bgra_vec[4..=7], [40,13,44,255]); // asserts the function
     /// ```
-    /// TO DO DOCUMENTATION, example works
+    /// TO DO DOCUMENTATION, example to update
     /// 
     /// # Examples
     /// 
@@ -493,7 +493,7 @@ macro_rules! color_match_and_alter {
 /// assert!(max_blue_full_opacity!(abgr_vec_slice)); // asserts the macro
 /// assert!(max_blue_full_opacity(abgr_vec_slice)); // asserts the function
 /// ```
-/// TO DO DOCUMENTATION, example works
+/// TO DO DOCUMENTATION, example to update
 /// # Examples
 /// 
 /// ```
@@ -542,7 +542,7 @@ macro_rules! create_slice_color_matcher_or_alterator {
     };
 }
 
-/// TO DO DOCUMENTATION, example works
+/// TO DO DOCUMENTATION, example to update
 /// 
 /// # Examples
 /// 
@@ -610,7 +610,7 @@ macro_rules! create_vec_index_alterator {
 /// assert!(max_blue_full_opacity!(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3])); // asserts the macro
 /// assert!(max_blue_full_opacity(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3])); // asserts the function
 /// ```
-/// TO DO DOCUMENTATION, example works
+/// TO DO DOCUMENTATION, example to update
 /// # Examples
 /// 
 /// ```

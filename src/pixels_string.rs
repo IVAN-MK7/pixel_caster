@@ -1,8 +1,8 @@
 use image;
-use std::{fs, path::Path, io, ffi::OsStr, ops::Index};
+use std::{fs, path::Path, io, ffi::OsStr};
 use lazy_static::lazy_static;
 
-use crate::{ternary, sub_limited, add_limited, bgra_management::*, PixelValues};
+use crate::{add_limited, bgra_management::*, PixelValues};
 
 /// BGRA for the invisible pixels (those to not display, Alpha = 0). B=G=R=A=0 combination stands for completely transparent black
 const BGRA_INVISIBLE_PIXEL :(u8,u8,u8,u8) = (0,0,0,0);
@@ -12,7 +12,7 @@ const BGRA_INVISIBLE_PIXEL :(u8,u8,u8,u8) = (0,0,0,0);
 /// with those pixels creates the most little rectange that still comprehends them
 /// returns the rectangle as a Vec<u8>, there is an option to return a Vec<Vec<u8>>
 /// start_x/y from 0 to width/height, range_x/y max as width/height
-pub fn char_collection_from_image (buffer :&Vec<u8>, height :usize, mut start_x :usize, start_y :usize, mut range_x :usize, range_y :usize, min_px_space_btwn_chars :usize, chars_string :&str, space_char_width :u32, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> Result<CharsCollection<u8>, String> {
+pub fn char_collection_from_image(buffer :&Vec<u8>, height :usize, mut start_x :usize, start_y :usize, mut range_x :usize, range_y :usize, min_px_space_btwn_chars :usize, chars_string :&str, space_char_width :u32, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> Result<CharsCollection<u8>, String> {
     
     // edges, cardinal points of the range of pixels that pass the bgra_matcher (e.g. : bgra_matchers::visible = which werent transparent, where A > 0)
     let img_visible_range = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, range_x, bgra_matcher);
