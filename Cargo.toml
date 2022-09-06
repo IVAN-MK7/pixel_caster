@@ -1,14 +1,24 @@
 [package]
 name = "pixel_caster"
-description = "Cast pixels to and from the screen by managing their RGBA values"
+description = "Cast pixels to and from the screen by managing their RGBA values. Import characters from .png files"
 keywords = ["screen", "cast", "retrieve", "pixel", "RGBA"]
-version = "0.2.10"
+version = "1.0.0"
 edition = "2021"
 authors = ["IVAN MK7 <ivan@mk7.tech>"]
 repository = "https://github.com/IVAN-MK7/pixel_caster/"
 readme = "README.md"
 categories = ["os::windows-apis"]
 license = "MIT"
+
+# for performance: 'cargo run --release -- -Ctarget-cpu=native', and uncomment below lines
+#default-run = "performance_test"
+#[profile.release]
+#lto = "fat"
+#codegen-units = 1
+#[[bin]]
+#name = "main"
+#path = "src/main.rs"
+# end for performance
 
 [lib]
 name = "pixel_caster"
@@ -26,14 +36,43 @@ path = "examples/send_bytes_to_pixels.rs"
 name = "clone_pixels_on_screen"
 path = "examples/clone_pixels_on_screen.rs"
 
+[[example]]
+name = "send_bytes_to_pixels_with_max_alpha"
+path = "examples/send_bytes_to_pixels_with_max_alpha.rs"
+
+[[example]]
+name = "send_pixels_hiding_specific_color"
+path = "examples/send_pixels_hiding_specific_color.rs"
+
+[[example]]
+name = "text_from_png_chars_sample_to_screen"
+path = "examples/text_from_png_chars_sample_to_screen.rs"
+
+[[test]]
+name = "performance_test"
+path = "tests/performance_test.rs"
+
 [dependencies]
-libc = "0.2.121"
+libc = "0.2.126"
+image = { version = "0.24.3", optional = true }
+lazy_static = { version = "1.4.0", optional = true }
+#pixel_caster = { path = "../pixel_caster", default-features = false  } default-features = false : to not use the pixels_string feature (and its relative dependencies/optional features, like the "image" crate)
+
+[dev-dependencies]
+eager = "0.1.0"
+paste = "1.0.8"
+
+
+[features]
+default = ["pixels_string"]
+# Defines a feature named `pixels_string` that does not enable any other features, but enables the optional dependency "image" crate.
+pixels_string = ["dep:image", "dep:lazy_static"]
+
 
 [dependencies.windows]
-version = "0.35.0"
+version = "0.39.0"
 
 features = [
-    "alloc",
     "Win32_Graphics",
     "Win32_Graphics_Gdi",
     "Win32_Foundation",
