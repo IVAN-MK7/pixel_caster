@@ -482,7 +482,7 @@ mod tests {
     #[test]
     fn test_u8_u32_convertion_png_with_transparency(){
         
-        let image_u8_bgra = PixelsCollection::from_png("media/Logo_MK7_Transparent_Bg_ColorsWithHalfAlpha.png").unwrap();
+        let image_u8_bgra = PixelsCollection::<u8>::from_png("media/Logo_MK7_Transparent_Bg_ColorsWithHalfAlpha.png").unwrap();
 
         let image_u8_bgra_from_image_rgba = image_u8_bgra.clone();
         Screen::update_area_custom(&image_u8_bgra_from_image_rgba.bytes, -200, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaEnabled);

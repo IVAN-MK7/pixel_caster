@@ -5,7 +5,7 @@ use pixel_caster::bgra_management::{SwitchBytes, bytes_matchers};
 #[test]
 /// Gets a PixelsCollection from a .png, then attempts to create a CharsCollection from it
 fn png_to_char_collection() {
-    let image = pixels_string::PixelsCollection::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
+    let image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
     
     let transparent_green_chars_transparent_background = image.try_create_char_collection(10, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
 
@@ -32,7 +32,7 @@ fn png_to_char_collection() {
     }
     
 
-    let image = pixels_string::PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+    let image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     
     let opaque_grey_scale_chars_white_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible_not_white);
 
@@ -52,7 +52,7 @@ fn png_to_char_collection() {
 
 
 
-    let mut image = pixels_string::PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+    let mut image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     image.bytes = PixelsCollection::white_background_to_transparency_gradient(&image.bytes);
 
     let transparent_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
@@ -68,7 +68,7 @@ fn png_to_char_collection() {
         Err(err) => print!("{}", err),
     }
     
-    let mut image = pixels_string::PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+    let mut image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
 
     let threshold_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
@@ -222,7 +222,7 @@ fn copy_and_paste_pixels_slimmed() {
 
 #[test]
 fn test_send_bytes_transparency() {
-    let image_u8_bgra = PixelsCollection::from_png("media/Logo_MK7_Transparent_Bg_ColorsWithHalfAlpha.png").unwrap();
+    let image_u8_bgra = PixelsCollection::<u8>::from_png("media/Logo_MK7_Transparent_Bg_ColorsWithHalfAlpha.png").unwrap();
     Screen::update_area_custom(&image_u8_bgra.bytes, -100, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaEnabled);
     Screen::update_area_custom(&image_u8_bgra.bytes, -100, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaDisabled);
     Screen::update_area_custom(&image_u8_bgra.bytes, -100, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaDisabledHideBGR(0, 0, 255));

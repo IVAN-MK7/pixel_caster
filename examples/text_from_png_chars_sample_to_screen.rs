@@ -3,7 +3,7 @@ use pixel_caster::bgra_management::bytes_matchers;
 fn main () {
     // starting from a .png containing a sample of characters
 
-    let image = pixels_string::PixelsCollection::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
+    let image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
     
     let transparent_green_chars_transparent_background = image.try_create_char_collection(10, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
 
@@ -30,7 +30,7 @@ fn main () {
     }
     
 
-    let image = pixels_string::PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+    let image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     
     let opaque_grey_scale_chars_white_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible_not_white);
 
@@ -50,7 +50,7 @@ fn main () {
 
 
 
-    let mut image = pixels_string::PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+    let mut image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     image.bytes = PixelsCollection::white_background_to_transparency_gradient(&image.bytes);
 
     let transparent_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
@@ -66,7 +66,7 @@ fn main () {
         Err(err) => print!("{}", err),
     }
     
-    let mut image = pixels_string::PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+    let mut image = pixels_string::PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
 
     let threshold_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);

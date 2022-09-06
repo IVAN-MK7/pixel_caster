@@ -61,7 +61,7 @@ mod tests {
     fn string_of_chars() {
 
         //let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
-        let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
+        let image_transparent_bkgrnd = PixelsCollection::<u8>::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
         //let image_transparent_bkgrnd = PixelsCollection::from_png("media/chars_sample_40px_blue_whitebackground.png").unwrap();
         // send_bytes(&image_white_bkgrnd.bytes, &(image_white_bkgrnd.width as i32), &(image_white_bkgrnd.height as i32), &0, &0, 255);
         
@@ -351,9 +351,9 @@ impl PixelsCollection<u8> {
     pub fn from_png(png_path: &str) -> Result<PixelsCollection<u8>,String> {
         // get Vec<u8> from .png and load it to a .png format, png works in RGBA, to make it usable it will be converted into BGRA
         match crate::pixels_string::png_into_pixels_collection(png_path) {
-            Ok(mut bytes) => {
-                bytes.switch_bytes(0,2);
-                Ok(bytes)
+            Ok(mut pixel_coll) => {
+                pixel_coll.switch_bytes(0,2);
+                Ok(pixel_coll)
             },
             Err(err) => Err(err)
         }
@@ -492,6 +492,17 @@ impl PixelsCollection<u8> {
 }
 
 impl PixelsCollection<u32> {
+    /// Creates a new instance from a .png (resulting color bytes will be BGRA ordered)
+    pub fn from_png(png_path: &str) -> Result<PixelsCollection<u32>,String> {
+        // get Vec<u8> from .png and load it to a .png format, png works in RGBA, to make it usable it will be converted into BGRA
+        match crate::pixels_string::png_into_pixels_collection(png_path) {
+            Ok(mut pixel_coll) => {
+                pixel_coll.switch_bytes(0,2);
+                Ok(PixelsCollection::<u32>::create(pixel_coll.width, pixel_coll.height, <u8>::u8_u32_casting(&pixel_coll.bytes))?)
+            },
+            Err(err) => Err(err)
+        }
+    }
     pub fn switch_bytes(&mut self, i1 :usize, i2 :usize) {
         <u32>::switch_bytes(&mut self.bytes, i1, i2);
     }
