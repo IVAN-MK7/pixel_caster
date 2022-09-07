@@ -399,6 +399,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
                 DeleteDC(win_api_screen.dc_screen);
+                DeleteObject(win_api_screen.captured_hbmp);
                 DeleteObject(hbmp_from_bytes);
             }
         }
@@ -516,6 +517,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
                 DeleteDC(win_api_screen.dc_screen);
+                DeleteObject(win_api_screen.captured_hbmp);
                 DeleteObject(hbmp_from_bytes);
             }
         }
