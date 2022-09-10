@@ -5,7 +5,7 @@ extern crate eager;
 #[macro_use]
 extern crate pixel_caster;
 
-use pixel_caster::{pixels_string::PixelsCollection, bgra_management::ColorAlteration, PixelValues};
+use pixel_caster::{PixelsCollection, bgra_management::ColorAlteration, PixelValues};
 
 #[test]
 fn main() {

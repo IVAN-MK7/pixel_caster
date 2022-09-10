@@ -2,10 +2,9 @@ use image;
 use std::{fs, path::Path, io, ffi::OsStr};
 use lazy_static::lazy_static;
 
-use crate::{add_limited, bgra_management::*, PixelValues};
-
-/// BGRA for the invisible pixels (those to not display, Alpha = 0). B=G=R=A=0 combination stands for completely transparent black
-const BGRA_INVISIBLE_PIXEL :(u8,u8,u8,u8) = (0,0,0,0);
+use crate::{add_limited, bgra_management::*, PixelValues, BGRA_INVISIBLE_PIXEL};
+/// added because PixelsCollection was moved to a new module, "pub" in order to make it callable from this module pixels_string::PixelsCollection for backwards compatibility, to remove at version 2.0
+pub use crate::PixelsCollection;
 
 /// Tries to get the same amount of characters provided in chars_string from the whole PixelsCollection
 /// from a starting pixel scans an area of the given range and gets the pixels that pass the bgra_matcher
@@ -311,41 +310,7 @@ fn pixel_grabber(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize
     //return  values;
 }
 
-
-/// Contains pixels' color bytes data and info
-#[derive(Clone)]
-pub struct PixelsCollection<T: PixelValues<T>> {
-    /// Width of the rectangle represented by the color bytes
-    pub width :usize,
-    /// Height of the rectangle represented by the color bytes
-    pub height :usize,
-    /// Units of color bytes necessary to build a single row of pixels in the rectangle of pixels
-    pub row_length :usize,
-    /// Vec of bytes containing pixels' color data
-    pub bytes :Vec<T>,
-    /// How many units of this type of value are necessary to represent a single pixel's color (u8 : 4 (1Blue,1Red,1Green,1Alpha), u32 : 1 (0xAARRGGBB))
-    pub units_per_pixel: u8,
-}
-impl<T: PixelValues<T>> PixelsCollection<T> {
-    /// Creates a new instance that will represent a rectangle with width * height area, filled with the provided color bytes
-    pub fn create(width :usize, height :usize, bytes :Vec<T>) -> Result<PixelsCollection<T>, String> {
-        // if bytes.len()%4 != 0
-        if bytes.len() % <T>::units_per_pixel() as usize != 0 {
-            return Err("provided Vec<u8>'s length must be divisible by 4, as it takes 4 values (BGRA, in Vec<u8>) to get the resulting color for each pixel".to_string());
-        }
-        if bytes.len() != width * height * <T>::units_per_pixel() as usize {
-            return Err("provided Vec's length does not match width * height of the resulting values area".to_string());
-        }
-        Ok(PixelsCollection {
-            width,
-            height,
-            row_length: ((width * height * <T>::units_per_pixel() as usize) / height) as usize,
-            bytes,
-            units_per_pixel: <T>::units_per_pixel()
-        })
-    }
-}
-
+/// Additional implementations that enables .png importing and CharsCollection creation
 impl PixelsCollection<u8> {
     /// Creates a new instance from a .png (resulting color bytes will be BGRA ordered)
     pub fn from_png(png_path: &str) -> Result<PixelsCollection<u8>,String> {
@@ -358,26 +323,6 @@ impl PixelsCollection<u8> {
             Err(err) => Err(err)
         }
     }
-    pub fn switch_bytes(&mut self, i1 :usize, i2 :usize) {
-        <u8>::switch_bytes(&mut self.bytes, i1, i2);
-    }
-    /// If a BGRA combination is met, set it to a provided BGRA
-    pub fn matching_color_change (&mut self, b :u8, g :u8, r :u8, a : u8, new_b :u8, new_g :u8, new_r :u8, new_a :u8) {
-        self.bytes.color_matcher_and_new_color(|v0:u8,v1:u8,v2:u8,v3:u8| -> bool { v0 == b && v1 == g && v2 == r && v3 == a},new_b,new_g,new_r,new_a);
-    }
-    /// Sets BGRA for the invisible pixels (not displayed, Alpha = 0, which BGRA values match BGRA_INVISIBLE_PIXEL)
-    pub fn set_bgra_for_invisible (&mut self, b :u8, g :u8, r :u8, a : u8) {
-        self.bytes.color_matcher_and_new_color(
-            |v0:u8,v1:u8,v2:u8,v3:u8| -> bool {
-                v0 == BGRA_INVISIBLE_PIXEL.0 &&
-                v1 == BGRA_INVISIBLE_PIXEL.1 &&
-                v2 == BGRA_INVISIBLE_PIXEL.2 &&
-                v3 == BGRA_INVISIBLE_PIXEL.3
-            },
-            b,g,r,a
-        );
-    }
-    
     /// Tries to get the same amount of characters provided in chars_string from the whole PixelsCollection
     pub fn try_create_char_collection(&self, min_px_space_btwn_chars :usize, chars_string :&str, space_char_width :u32, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> Result<CharsCollection<u8>, String> {
 
@@ -394,103 +339,7 @@ impl PixelsCollection<u8> {
             Err(err) => Err(err)
         }
     }
-    /// If a BGR combination of any grey (equal B,G,R make shades of grey) is met and their value exceed the given threshold, 
-    /// it's Alpha will be set to a provided value. Every grey will be set to black
-    pub fn grey_scale_into_black (vec : &mut Vec<u8>, grey_threshold :u8) {
-        let mut i = 0;
-        for _ in 0..(vec.len()/4) {
-            // sets greys (equal B,G,R make shades of grey) opacity to a given Alpha when they come too close to white (B,G,R : 255)
-            // / too far away from black (B,G,R : 0) by a given grey_threshold value
-            // >137 , >149 ...
-            // shade of grey
-            if vec[i] == vec[i+1] && vec[i] == vec[i+2] {
-                if  vec[i] > grey_threshold {
-                    vec[i] = BGRA_INVISIBLE_PIXEL.0;
-                    vec[i+1] = BGRA_INVISIBLE_PIXEL.1;
-                    vec[i+2] = BGRA_INVISIBLE_PIXEL.2;
-                    vec[i+3] = BGRA_INVISIBLE_PIXEL.3;
-                }
-                // transforms shades of grey into fully opaque black, except for white
-                else {
-                    vec[i] = 0;
-                    vec[i+1] = 0;
-                    vec[i+2] = 0;
-                    vec[i+3] = 255;
-                }
-            }
-            i +=4;
-        }
-    }
-    /// Whites become transparent, range from white to lowest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
-    pub fn white_background_to_transparency_gradient(vec :&Vec<u8>) -> Vec<u8> {
-        let mut vec_adjusted :Vec<u8> = Vec::with_capacity(vec.len());
-    
-        let mut j = 0;
-        // get Alpha Rred Green Blue values
-        let mut lowest_blue = 255;
-        let mut lowest_green = 255;
-        let mut lowest_red = 255;
-        for _ in 0..vec.len()/4 {
-            if vec[j] < lowest_blue {
-                lowest_blue = vec[j];
-            }
-            if vec[j+1] < lowest_green {
-                lowest_green = vec[j+1];
-            }
-            if vec[j+2] < lowest_red {
-                lowest_red = vec[j+2];
-            }
-            j += 4;
-        }
-        let mut lowest_val = 255;
-        let mut lowest_val_index = 0;
-        if lowest_blue < lowest_val {
-            lowest_val = lowest_blue;
-            lowest_val_index = 0;
-        }
-        if lowest_green < lowest_val {
-            lowest_val = lowest_green;
-            lowest_val_index = 1;
-        }
-        if lowest_red < lowest_val {
-            lowest_val = lowest_red;
-            lowest_val_index = 2;
-        }
-    
-        let mut i = 0;
-        for _ in 0..vec.len()/4 {
-            // get Alpha Rred Green Blue values
-            let blue = vec[i];
-            let green = vec[i+1];
-            let red = vec[i+2];
-            let alpha = vec[i+3];
-            // if pixel has full opacity (no transparency, Alpha is at it's max : 255 (u8))
-            if alpha == 255 {
-                // and pixel is not white (B=G=R == 255)
-                if blue < 255 || green < 255 || red < 255 {
-                    // we need to adjust the values of the RGB bytes
-    
-                    // get the byte we need as adjusting base (this color's byte which in the whole image reached the lowest value (B or G or R))
-                    let this_val = vec[i + lowest_val_index];
-                    let alpha_adjusted = (255 - this_val + lowest_val) as u8;
-                    vec_adjusted.extend_from_slice(&[lowest_blue, lowest_green, lowest_red, alpha_adjusted]);
-                }
-                // pixel is white, so make it transparent. add lowest BGR values to keep the bytes all with the same BGR values, and only change the Alpha
-                else {
-                    vec_adjusted.extend_from_slice(&[lowest_blue, lowest_green, lowest_red, 0]);
-                }
-            }
-            // pixel has some transparency (Alpha < 255), leave it as is
-            else {
-                vec_adjusted.extend_from_slice(&[blue, green, red, alpha]);
-            }
-    
-            i += 4;
-        }
-        return vec_adjusted;
-    }
 }
-
 impl PixelsCollection<u32> {
     /// Creates a new instance from a .png (resulting color bytes will be BGRA ordered)
     pub fn from_png(png_path: &str) -> Result<PixelsCollection<u32>,String> {
@@ -503,10 +352,8 @@ impl PixelsCollection<u32> {
             Err(err) => Err(err)
         }
     }
-    pub fn switch_bytes(&mut self, i1 :usize, i2 :usize) {
-        <u32>::switch_bytes(&mut self.bytes, i1, i2);
-    }
 }
+
 
 /// Gets a Vec<u8> in RGBA values from a .png
 pub fn png_into_pixels_collection (png_path :&str) -> Result<PixelsCollection<u8>,String> {
@@ -535,13 +382,6 @@ pub fn png_into_pixels_collection (png_path :&str) -> Result<PixelsCollection<u8
 fn create_dir_recursive(dir_full_path : &str) -> std::io::Result<()> {
     fs::create_dir_all(dir_full_path)?;
     Ok(())
-}
-
-
-fn get_extension_from_filename(filename: &str) -> Option<&str> {    
-    Path::new(filename)        
-    .extension()        
-    .and_then(OsStr::to_str)
 }
 
 /// Character name, the char it refers to and its PixelsCollection
@@ -603,6 +443,7 @@ impl CharsCollection<u8> {
         for entry in fs::read_dir(Path::new(dir))? {
             let entry = entry?;
             let path = entry.path();
+            // path is directory && get extension from filename == "png"
             if !path.is_dir() && path.extension().and_then(OsStr::to_str).unwrap() == "png" {
                 let fname_without_extension = String::from(path.file_stem().unwrap().to_str().unwrap());
                 let fpath = path.into_os_string().into_string().unwrap();
@@ -610,9 +451,9 @@ impl CharsCollection<u8> {
 
                 // get Vec<u8> from .png and load it to a .png format, png works in RGBA, to make it usable it will be converted into BGRA
                 match PixelsChar::from_png(&fpath, CHARS.get_char_by_char_name_with_default(&fname_without_extension), &fname_without_extension) {
-                    Ok(mut PixelsChar) => {
-                        PixelsChar.switch_bytes(0,2);
-                        char_u8_vec.chars.push(PixelsChar);
+                    Ok(mut pixels_char) => {
+                        pixels_char.switch_bytes(0,2);
+                        char_u8_vec.chars.push(pixels_char);
                     },
                     Err(_) => ()
                 }

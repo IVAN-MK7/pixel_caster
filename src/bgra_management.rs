@@ -440,7 +440,7 @@ pub fn u32_bytes_oredered_indexes_and_fullvalues() -> ([usize;4],[u32;4]) {
 
 #[cfg(test)]
 mod tests {
-    use crate::{bgra_management::*, pixels_string::PixelsCollection, Screen, PixelsSendMode};
+    use crate::{bgra_management::*, PixelsCollection, Screen, PixelsSendMode};
 
     #[test]
     fn test_u8_u32_convertion(){
