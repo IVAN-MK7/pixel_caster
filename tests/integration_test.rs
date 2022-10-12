@@ -7,7 +7,7 @@ use pixel_caster::bgra_management::{SwitchBytes, bytes_matchers};
 fn png_to_char_collection() {
     let image = PixelsCollection::<u8>::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
     
-    let transparent_green_chars_transparent_background = image.try_create_char_collection(10, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
+    let transparent_green_chars_transparent_background = image.try_create_char_collection(10, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
 
     match transparent_green_chars_transparent_background {
         Ok(transparent_green_chars_transparent_background) => {
@@ -34,7 +34,7 @@ fn png_to_char_collection() {
 
     let image = PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     
-    let opaque_grey_scale_chars_white_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible_not_white);
+    let opaque_grey_scale_chars_white_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible_not_white);
 
     match opaque_grey_scale_chars_white_background {
         Ok(mut opaque_grey_scale_chars_white_background) => {
@@ -55,7 +55,7 @@ fn png_to_char_collection() {
     let mut image = PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     image.bytes = PixelsCollection::white_background_to_transparency_gradient(&image.bytes);
 
-    let transparent_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
+    let transparent_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
 
     match transparent_black_chars_transparent_background {
         Ok(transparent_black_chars_transparent_background) => {
@@ -71,7 +71,7 @@ fn png_to_char_collection() {
     let mut image = PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
 
-    let threshold_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#, 5, bytes_matchers::visible);
+    let threshold_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
 
     match threshold_black_chars_transparent_background {
         Ok(threshold_black_chars_transparent_background) => {

@@ -71,7 +71,7 @@ mod tests {
         let mut range_x = image_transparent_bkgrnd.width;
         let range_y = image_transparent_bkgrnd.height;
         let min_px_space_btwn_chars = 10;
-        let chars_string = r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{}"£$%&='^"#;
+        let chars_string = r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#;
         // a b c d e f g h i j k l m n o p q r s t u v w x y z , . ? ! 0 1 2 3 4 5 6 7 8 9 0 - + / * \ _ @ # ( ) [ ] { } " £ $ % & = ' ^
         let space_char_width = 0;
 
@@ -193,19 +193,19 @@ mod tests {
 }
 
 
-struct CardinalPoints {
-    top_y :usize,
-    top_y_index :usize,
-    right_x :usize,
-    right_x_index :usize,
-    left_x :usize,
-    left_x_index :usize,
-    bottom_y :usize,
-    bottom_y_index :usize
+pub struct CardinalPoints {
+    pub top_y :usize,
+    pub top_y_index :usize,
+    pub right_x :usize,
+    pub right_x_index :usize,
+    pub left_x :usize,
+    pub left_x_index :usize,
+    pub bottom_y :usize,
+    pub bottom_y_index :usize
 }
 
 /// returns the cardinal points of given range of which pixels match a condition
-fn get_cardinal_points_until_nonestreak_x (buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, none_streak_x :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> CardinalPoints {
+pub fn get_cardinal_points_until_nonestreak_x (buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, none_streak_x :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> CardinalPoints {
     
     // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
     let stride = buffer.len() / height;
@@ -253,7 +253,7 @@ fn get_cardinal_points_until_nonestreak_x (buffer :&Vec<u8>, height :usize, star
 
 /// From a starting pixel scans an area of the given range and populates a new Vec<u8> with the given range with pixels that pass the bgra_matcher.
 /// Returns the Vec<u8> and the cardinal points of the most outer pixels that passed the bgra_matcher
-fn pixel_grabber(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> (Vec<u8>, CardinalPoints) {
+pub fn pixel_grabber(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> (Vec<u8>, CardinalPoints) {
     
     // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
     let stride = buffer.len() / height;
@@ -420,6 +420,11 @@ impl PixelsChar<u8> {
 
 #[derive(Clone,Copy)]
 pub struct BGRA<T: Copy + Clone> (pub T, pub T, pub T, pub T);
+impl<T: Copy + Clone> BGRA<T> {
+    pub fn to_vec(&self) -> Vec<T> {
+        return vec![self.0,self.1,self.2,self.3]
+    }
+}
 
 /// Collection of PixelsChar
 #[derive(Clone)]

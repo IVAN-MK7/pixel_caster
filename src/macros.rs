@@ -36,6 +36,7 @@ macro_rules! sub_limited {
         }
     }
 }
+
 // keeps adding units of $add to $val until it reaches $limit or $add has no more units
 #[macro_export]
 macro_rules! add_limited {
@@ -54,7 +55,7 @@ macro_rules! add_limited {
             }
             else {
                 while s > 0 {
-                    if v > $limit {
+                    if v != $limit {
                         v += 1; // add
                         s -= 1;
                     }

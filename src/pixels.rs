@@ -272,6 +272,46 @@ impl PixelsCollection<u8> {
         }
         return vec_adjusted;
     }
+
+    /// Returns a new PixelsCollection from the provided one, scaling based on the provided ResizeSize (either width or hight)
+    pub fn create_new_resized(&self, resize_size: ResizeSize) -> PixelsCollection<u8> {
+
+        let new_height;
+        let new_width;
+
+        match resize_size {
+            ResizeSize::Width(w) => {
+                new_width = w;
+                new_height = (new_width * self.height) / self.width;
+            },
+            ResizeSize::Height(h) => {
+                new_height = h;
+                new_width = (new_height * self.width) / self.height;
+            }
+        }
+    
+        let x_ratio: f32 = self.width as f32 / new_width as f32;
+        let y_ratio: f32 = self.height as f32 / new_height as f32;
+
+        let mut bytes_resized = Vec::<u8>::with_capacity(new_width * new_height * 4);
+        for fy in 0..new_height {
+            for fx in 0..new_width {
+                let pixel_needed = self.row_length * (fy as f32 * y_ratio) as usize + 4 * (fx as f32 * x_ratio) as usize;
+                bytes_resized.push(self.bytes[pixel_needed]);
+                bytes_resized.push(self.bytes[pixel_needed+1]);
+                bytes_resized.push(self.bytes[pixel_needed+2]);
+                bytes_resized.push(self.bytes[pixel_needed+3]);
+            }
+        }
+
+        return PixelsCollection::create(new_width, new_height, bytes_resized).unwrap();
+    }
+}
+
+/// Measure of either Width or Height
+pub enum ResizeSize {
+    Width(usize),
+    Height(usize)
 }
 
 impl PixelsCollection<u32> {
