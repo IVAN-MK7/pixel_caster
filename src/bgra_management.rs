@@ -232,22 +232,16 @@ pub fn image_lowest_visible_bgr (vec :&Vec<u8>) -> BGRA<u8> {
 }
 
 /// Returns B,G,R of the last found color with the heighest A
-pub fn image_opaquest_bgr (vec :&Vec<u8>) -> Vec<u8> {
+pub fn image_opaquest_bgr(vec :&Vec<u8>) -> Vec<u8> {
     
     let mut j = 0;
-    // get Alpha Rred Green Blue values
+    // get Alpha Red Green Blue values
     let mut blue = 255;
     let mut green = 255;
     let mut red = 255;
     let mut highest_alpha = 0;
     for _ in 0..vec.len()/4 {
-        if vec[j+3] == 255 {
-            highest_alpha = vec[j+3];
-            blue = vec[j];
-            green = vec[j+1];
-            red = vec[j+2];
-        }
-        else if vec[j+3] >= highest_alpha {
+        if vec[j+3] >= highest_alpha {
             highest_alpha = vec[j+3];
             blue = vec[j];
             green = vec[j+1];

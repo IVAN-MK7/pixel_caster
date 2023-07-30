@@ -54,6 +54,7 @@ fn png_to_char_collection() {
 
     let mut image = PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     image.bytes = PixelsCollection::white_background_to_transparency_gradient(&image.bytes);
+    image.set_bgr(0, 0, 0); // set the color to black
 
     let transparent_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
 
@@ -223,10 +224,10 @@ fn copy_and_paste_pixels_slimmed() {
 #[test]
 fn test_send_bytes_transparency() {
     let image_u8_bgra = PixelsCollection::<u8>::from_png("media/Logo_MK7_Transparent_Bg_ColorsWithHalfAlpha.png").unwrap();
-    Screen::update_area_custom(&image_u8_bgra.bytes, -100, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaEnabled);
-    Screen::update_area_custom(&image_u8_bgra.bytes, -100, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaDisabled);
-    Screen::update_area_custom(&image_u8_bgra.bytes, -100, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaDisabledHideBGR(0, 0, 255));
-    Screen::update_area_custom(&image_u8_bgra.bytes, -100, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::CustomAlpha(100));
+    Screen::update_area_custom(&image_u8_bgra.bytes, 0, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaEnabled);
+    Screen::update_area_custom(&image_u8_bgra.bytes, 0, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaDisabled);
+    Screen::update_area_custom(&image_u8_bgra.bytes, 0, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::AlphaDisabledHideBGR(0, 0, 255));
+    Screen::update_area_custom(&image_u8_bgra.bytes, 0, 0, image_u8_bgra.width as u32, image_u8_bgra.height as u32, PixelsSendMode::CustomAlpha(100));
 }
 
 #[test]

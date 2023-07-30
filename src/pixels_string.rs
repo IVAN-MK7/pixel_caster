@@ -72,12 +72,12 @@ mod tests {
         let range_y = image_transparent_bkgrnd.height;
         let min_px_space_btwn_chars = 10;
         let chars_string = r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#;
-        // a b c d e f g h i j k l m n o p q r s t u v w x y z , . ? ! 0 1 2 3 4 5 6 7 8 9 0 - + / * \ _ @ # ( ) [ ] { } " £ $ % & = ' ^
+        // a b c d e f g h i j k l m n o p q r s t u v w x y z , . ? ! 0 1 2 3 4 5 6 7 8 9 0 - + / * \ _ @ # ( ) [ ] { } ; : " £ $ % & = ' ^
         let space_char_width = 0;
 
-        
+
         // range the extreme pixels which werent transparent (where A > 0)
-        let img_visible_range = get_cardinal_points_until_nonestreak_x (&buffer, height, start_x, start_y, range_x, range_y, range_x, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+        let img_visible_range = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, range_x, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
         
         let original_range_x = range_x;
 
@@ -90,13 +90,13 @@ mod tests {
 
         }
 
-        let mut char_u8_vec = CharsCollection { chars: Vec::new(), path : "".to_string(), bgra : BGRA(0,0,0,255)};
+        let mut char_u8_vec: CharsCollection<u8> = CharsCollection { chars: Vec::new(), path : "".to_string(), bgra : BGRA(0,0,0,255)};
 
         let mut bytes_chars_poles = buffer.clone();
 
         for char in chars_string.chars() {
             
-            let values = get_cardinal_points_until_nonestreak_x (&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+            let values = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
             
             // +1 because start and end values are included in the area, therefore if an area's first pixel is at 0 and it's last at 9 its range is 10, range is 9-0+1. Another e.g.: x starts at 10, ends at 40 : area = 31; 40 - 10 + 1
             let (mut pixels_captured, char_values) = pixel_grabber(&buffer, height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
@@ -205,7 +205,7 @@ pub struct CardinalPoints {
 }
 
 /// returns the cardinal points of given range of which pixels match a condition
-pub fn get_cardinal_points_until_nonestreak_x (buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, none_streak_x :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> CardinalPoints {
+pub fn get_cardinal_points_until_nonestreak_x(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, none_streak_x :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> CardinalPoints {
     
     // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
     let stride = buffer.len() / height;
@@ -357,7 +357,16 @@ impl PixelsCollection<u32> {
 
 /// Gets a Vec<u8> in RGBA values from a .png
 pub fn png_into_pixels_collection (png_path :&str) -> Result<PixelsCollection<u8>,String> {
-    match std::fs::read(png_path) {
+    
+    match image::open(png_path) {
+        Ok(img) => {
+            return Ok( PixelsCollection::<u8>::create(img.width() as usize, img.height() as usize, img.into_rgba8().to_vec())? );
+        },
+        Err(err) => {
+            return Err(err.to_string());
+        }
+    };
+    /*match std::fs::read(png_path) {
         Ok(bytes) => {
             match image::load_from_memory_with_format(&bytes, image::ImageFormat::Png) {
                 Ok(img) => {
@@ -376,7 +385,7 @@ pub fn png_into_pixels_collection (png_path :&str) -> Result<PixelsCollection<u8
         Err(err) => {
             return Err(err.to_string());
         }
-    }
+    }*/
 }
 
 fn create_dir_recursive(dir_full_path : &str) -> std::io::Result<()> {

@@ -70,6 +70,7 @@ pub struct ScreenArea {
     height: u32
 }
 
+
 /// Screen is used to get/send color bytes from/to the screen in a straightforward way
 pub struct Screen<T: PixelValues<T> + Copy> {
     /// PixelsCollection containing color bytes data and info
@@ -121,6 +122,11 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     pub fn get_bytes(&self) -> &Vec<T> {
         &self.pixels.bytes
     }
+
+    /// Returns a reference to its PixelsCollection's bytes Vec
+    pub fn get_bytes_mut(&mut self) -> &mut Vec<T> {
+        &mut self.pixels.bytes
+    }
     
     /// Returns a reference to its PixelsCollection
     pub fn get_pixels_collection(&self) -> &PixelsCollection<T> {
@@ -134,6 +140,19 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             self.screen_area.width as u32, self.screen_area.height as u32,
             &self.win_api_screen
         )
+    }
+    /// Updates self.pixels.bytes, make sure that the field not being read by other threads while this function is running.
+    pub unsafe fn scan_area_interior_mutability(&self) {
+        unsafe {
+            let const_ptr = self as *const Self;
+            let mut_ptr = const_ptr as *mut Self;
+            Self::get_bytes_from_screen(
+                (*mut_ptr).pixels.bytes.as_mut_ptr() as *mut c_void,
+                self.screen_area.upperleftcorner_x as i32, self.screen_area.upperleftcorner_y as i32,
+                self.screen_area.width as u32, self.screen_area.height as u32,
+                &self.win_api_screen
+            )
+        }
     }
     
     /// Puts the BGRA bytes of the Screen's set pixels area into the provided Vec, which must already have the necessary length to host the values
@@ -200,50 +219,56 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     
     /// Sends its PixelsCollection's bytes to the Screen's set pixels area
     pub fn update_area(&mut self) {
-        Self::pixels_send_mode_matcher(&self.pixels.bytes,
+        Self::pixels_send_mode_matcher(
+            &self.pixels.bytes,
             self.screen_area.upperleftcorner_x as i32, self.screen_area.upperleftcorner_y as i32,
-            self.screen_area.width as u32, self.screen_area.height as u32, &self.win_api_screen, self.pixels_send_mode)
+            self.screen_area.width as u32, self.screen_area.height as u32, &self.win_api_screen, self.pixels_send_mode
+        )
     }
     
     /// Sends the provided Vec's values to the Screen's set pixels area
     pub fn update_area_from_vec(&mut self, vec: &Vec<T>) {
-        Self::pixels_send_mode_matcher(vec,
+        Self::pixels_send_mode_matcher(
+            vec,
             self.screen_area.upperleftcorner_x as i32, self.screen_area.upperleftcorner_y as i32,
-            self.screen_area.width as u32, self.screen_area.height as u32, &self.win_api_screen, self.pixels_send_mode)
+            self.screen_area.width as u32, self.screen_area.height as u32, &self.win_api_screen, self.pixels_send_mode
+        )
     }
 
     /// Sends a provided Vec's values to the provided screen area with the given PixelsSendMode, without creating a Screen instance
     pub fn update_area_custom(vec: &Vec<T>, screen_area_upperleftcorner_x: i32, screen_area_upperleftcorner_y: i32, area_width: u32, area_height: u32, pixels_send_mode: PixelsSendMode) {
-        Self::pixels_send_mode_matcher(vec,
+        Self::pixels_send_mode_matcher(
+            vec,
             screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
-            area_width, area_height, &Self::gen_win_api_screen(area_width, area_height, false), pixels_send_mode)
+            area_width, area_height, &Self::gen_win_api_screen(area_width, area_height, false), pixels_send_mode
+        )
     }
     
     fn pixels_send_mode_matcher(vec: &Vec<T>, screen_area_upperleftcorner_x: i32, screen_area_upperleftcorner_y: i32, area_width: u32, area_height: u32, win_api_screen: &WindowsApiScreen, pixels_send_mode: PixelsSendMode) {
         match pixels_send_mode {
             PixelsSendMode::AlphaEnabled => Self::send_bytes_to_screen(vec,
-                screen_area_upperleftcorner_x as i32, screen_area_upperleftcorner_y as i32,
+                screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
                 area_width, area_height,
                 255, win_api_screen
             ),
             PixelsSendMode::AlphaDisabled => Self::send_bytes_to_screen_alpha_disabled(vec,
-                screen_area_upperleftcorner_x as i32, screen_area_upperleftcorner_y as i32,
+                screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
                 area_width, area_height, win_api_screen
             ),
             PixelsSendMode::AlphaDisabledHideBGR(b,g,r) => Self::send_bytes_to_screen_alpha_disabled_hide_specific_bgr(vec,
-                screen_area_upperleftcorner_x as i32, screen_area_upperleftcorner_y as i32,
+                screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
                 area_width, area_height, win_api_screen,b,g,r
             ),
             PixelsSendMode::CustomAlpha(custom_alpha) => {
                 if custom_alpha == 255 {
                     Self::send_bytes_to_screen_alpha_disabled(vec,
-                        screen_area_upperleftcorner_x as i32, screen_area_upperleftcorner_y as i32,
+                        screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
                         area_width, area_height, win_api_screen
                     );
                 }
                 else {
                     Self::send_bytes_to_screen(vec,
-                        screen_area_upperleftcorner_x as i32, screen_area_upperleftcorner_y as i32,
+                        screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
                         area_width, area_height, custom_alpha, win_api_screen
                     );
                 }
@@ -280,7 +305,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 32,
                 // uses BGRA format instead of RGBA
                 // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-                vec.as_ptr() as *mut c_void
+                Some(vec.as_ptr() as *mut c_void)
                 //&vec as *const Vec<u8> as *mut c_void
             );
             let hbmp_replace = SelectObject(win_api_screen.dc_screen, hbmp_from_bytes);
@@ -356,7 +381,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 32,
                 // uses BGR format instead of RGB
                 // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-                vec.as_ptr() as *mut c_void
+                Some(vec.as_ptr() as *mut c_void)
                 //&vec as *const Vec<u8> as *mut c_void
             );
             
@@ -436,7 +461,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 32,
                 // uses BGR format instead of RGB
                 // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-                vec.as_ptr() as *mut c_void
+                Some(vec.as_ptr() as *mut c_void)
                 //&vec as *const Vec<u8> as *mut c_void
             );
             

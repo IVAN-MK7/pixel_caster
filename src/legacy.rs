@@ -113,7 +113,7 @@ pub fn send_bytes<T: PixelValues<T> + Copy>(vec :&Vec<T>, area_width :u32, area_
             32,
             // uses BGRA format instead of RGBA
             // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-            vec.as_ptr() as *mut c_void
+            Some(vec.as_ptr() as *mut c_void)
             //&vec as *const Vec<u8> as *mut c_void
         );
         
@@ -195,7 +195,7 @@ pub fn send_bytes_alpha_disabled<T>(vec :&Vec<T>, area_width :u32, area_height :
             32,
             // uses BGR format instead of RGB
             // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-            vec.as_ptr() as *mut c_void
+            Some(vec.as_ptr() as *mut c_void)
             //&vec as *const Vec<u8> as *mut c_void
         );
         
@@ -267,7 +267,7 @@ pub fn send_bytes_alpha_disabled_hide_specific_bgr<T>(vec :&Vec<T>, area_width :
             32,
             // uses BGR format instead of RGB
             // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
-            vec.as_ptr() as *mut c_void
+            Some(vec.as_ptr() as *mut c_void)
             //&vec as *const Vec<u8> as *mut c_void
         );
         

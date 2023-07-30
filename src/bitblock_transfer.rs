@@ -22,7 +22,10 @@ pub use libc::c_void;
 // CreatedHDC and HDC can be either destination(dst) and source(src) or vice versa
 /// Bit-block transfer of the color data corresponding to an area of pixels of the RGBA sequence.
 /// It doesn't print the 4th value (A : alpha,opacity) so only RGB, the A won't be used.
-pub fn bit_block_transfer<Dst: std::convert::Into<HDC>, Src: std::convert::Into<HDC>> (dst :Dst, dst_ulc_x :i32, dst_ulc_y :i32, area_width :u32, area_height :u32, src :Src, src_ulc_x :i32, src_ulc_y :i32)
+pub fn bit_block_transfer<Dst, Src>(dst: Dst, dst_ulc_x: i32, dst_ulc_y: i32, area_width: u32, area_height: u32, src: Src, src_ulc_x: i32, src_ulc_y: i32)
+where
+    Dst: windows::core::IntoParam<HDC, windows::core::CopyType> + std::clone::Clone + windows::core::CanInto<HDC>,
+    Src: windows::core::IntoParam<HDC, windows::core::CopyType> + std::clone::Clone + windows::core::CanInto<HDC>
 {
     unsafe {
         // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-bitblt

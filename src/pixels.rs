@@ -162,11 +162,11 @@ impl PixelsCollection<u8> {
         <u8>::switch_bytes(&mut self.bytes, i1, i2);
     }
     /// If a BGRA combination is met, set it to a provided BGRA
-    pub fn matching_color_change (&mut self, b :u8, g :u8, r :u8, a : u8, new_b :u8, new_g :u8, new_r :u8, new_a :u8) {
+    pub fn matching_color_change(&mut self, b :u8, g :u8, r :u8, a : u8, new_b :u8, new_g :u8, new_r :u8, new_a :u8) {
         self.bytes.color_matcher_and_new_color(|v0:u8,v1:u8,v2:u8,v3:u8| -> bool { v0 == b && v1 == g && v2 == r && v3 == a},new_b,new_g,new_r,new_a);
     }
     /// Sets BGRA for the invisible pixels (not displayed, Alpha = 0, which BGRA values match BGRA_INVISIBLE_PIXEL)
-    pub fn set_bgra_for_invisible (&mut self, b :u8, g :u8, r :u8, a : u8) {
+    pub fn set_bgra_for_invisible(&mut self, b :u8, g :u8, r :u8, a : u8) {
         self.bytes.color_matcher_and_new_color(
             |v0:u8,v1:u8,v2:u8,v3:u8| -> bool {
                 v0 == BGRA_INVISIBLE_PIXEL.0 &&
@@ -177,9 +177,14 @@ impl PixelsCollection<u8> {
             b,g,r,a
         );
     }
+    /// Sets BGR values for every pixel
+    pub fn set_bgr(&mut self, b :u8, g :u8, r :u8) {
+        self.bytes.set_bgr(b, g, r);
+    }
+
     /// If a BGR combination of any grey (equal B,G,R make shades of grey) is met and their value exceed the given threshold, 
     /// it's Alpha will be set to a provided value. Every grey will be set to black
-    pub fn grey_scale_into_black (vec : &mut Vec<u8>, grey_threshold :u8) {
+    pub fn grey_scale_into_black(vec : &mut Vec<u8>, grey_threshold :u8) {
         let mut i = 0;
         for _ in 0..(vec.len()/4) {
             // sets greys (equal B,G,R make shades of grey) opacity to a given Alpha when they come too close to white (B,G,R : 255)
@@ -256,11 +261,11 @@ impl PixelsCollection<u8> {
                     // get the byte we need as adjusting base (this color's byte which in the whole image reached the lowest value (B or G or R))
                     let this_val = vec[i + lowest_val_index];
                     let alpha_adjusted = (255 - this_val + lowest_val) as u8;
-                    vec_adjusted.extend_from_slice(&[lowest_blue, lowest_green, lowest_red, alpha_adjusted]);
+                    vec_adjusted.extend_from_slice(&[blue, green, red, alpha_adjusted]);
                 }
                 // pixel is white, so make it transparent. add lowest BGR values to keep the bytes all with the same BGR values, and only change the Alpha
                 else {
-                    vec_adjusted.extend_from_slice(&[lowest_blue, lowest_green, lowest_red, 0]);
+                    vec_adjusted.extend_from_slice(&[blue, green, red, 0]);
                 }
             }
             // pixel has some transparency (Alpha < 255), leave it as is
