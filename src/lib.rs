@@ -9,7 +9,6 @@ use windows::Win32::{
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/
     Graphics::Gdi::{
         CreateBitmap,
-        CreatedHDC,
         CreateCompatibleDC,
         CreateCompatibleBitmap,
         SelectObject,
@@ -51,7 +50,7 @@ pub struct WindowsApiScreen {
     screen: HDC,
     /// Create a compatible bitmap of the requested pixel area (area_width x area_height px).
     /// Used either as a handle (H) of a memory device context (DC) from/to which capture/send data (BGRA colors)
-    dc_screen: CreatedHDC,
+    dc_screen: HDC,
     /// requested pixels' area width and height to be captured
     captured_hbmp: HBITMAP,
     /// Determines if the values are to keep after use or not
@@ -99,9 +98,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// Initializes a new Screen instance
     pub fn new(screen_area_upperleftcorner_x: i32, screen_area_upperleftcorner_y: i32, area_width: u32, area_height: u32) -> Screen<T> {
         
-        let mut bytes = Vec::<T>::with_capacity((area_width * area_height * <T>::units_per_pixel() as u32) as usize);
-        unsafe { bytes.set_len(bytes.capacity()); }
-        
+        let bytes = <T as PixelValues<T>>::initialize_vec(area_width as usize, area_height as usize);
         Screen {
             pixels: PixelsCollection::<T>::create(area_width as usize, area_height as usize, bytes).unwrap(),
             screen_area: ScreenArea { upperleftcorner_x: screen_area_upperleftcorner_x, upperleftcorner_y: screen_area_upperleftcorner_y, width: area_width, height: area_height},

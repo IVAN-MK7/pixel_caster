@@ -54,7 +54,7 @@ path = "tests/performance_test.rs"
 
 [dependencies]
 libc = "0.2.147"
-image = { version = "0.24.6", optional = true }
+image = { version = "0.25.1", optional = true }
 lazy_static = { version = "1.4.0", optional = true }
 #pixel_caster = { path = "../pixel_caster", default-features = false  } default-features = false : to not use the pixels_string feature (and its relative dependencies/optional features, like the "image" crate). path instead of version to load the locally store crate
 
@@ -70,7 +70,7 @@ pixels_string = ["dep:image", "dep:lazy_static"]
 
 
 [dependencies.windows]
-version = "0.48.0"
+version = "0.56.0"
 
 features = [
     "Win32_Graphics",
