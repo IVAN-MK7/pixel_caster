@@ -52,13 +52,11 @@ impl PixelValues<u8> for u8 {
     
             i += 4;
         }
-        return vec_adjusted;
+        vec_adjusted
     }
 
     fn initialize_vec(area_width: usize, area_height: usize) -> Vec<u8> {
-        let mut vec_u8_size_set = Vec::<u8>::with_capacity(area_width * area_height * <u8>::units_per_pixel() as usize);
-        unsafe { vec_u8_size_set.set_len(vec_u8_size_set.capacity()); }
-        return vec_u8_size_set
+        vec!(0; area_width * area_height * <u8>::units_per_pixel() as usize)
     }
 
     fn units_per_pixel() -> u8 { 4 }
@@ -109,13 +107,11 @@ impl PixelValues<u32> for u32 {
             // set the BGRA values back to their u32 original positions (in a CPU with little endianness BGRA bytes will go from right to left : 0xAARRGGBB)
             vec_adjusted.extend_from_slice(&[(alpha << v4_index) + (red_adjusted << v3_index) + (green_adjusted << v2_index) + (blue_adjusted << v1_index)]);
         }
-        return vec_adjusted;
+        vec_adjusted
     }
 
     fn initialize_vec(area_width: usize, area_height: usize) -> Vec<u32> {
-        let mut vec_u32_size_set = Vec::<u32>::with_capacity(area_width * area_height * <u32>::units_per_pixel() as usize);
-        unsafe { vec_u32_size_set.set_len(vec_u32_size_set.capacity()); }
-        return vec_u32_size_set
+        vec!(0; area_width * area_height * <u32>::units_per_pixel() as usize)
     }
 
     fn units_per_pixel() -> u8 { 1 }
@@ -123,14 +119,15 @@ impl PixelValues<u32> for u32 {
 }
 
 
-/// Contains pixels' color bytes data and info
-#[derive(Clone)]
+/// Contains pixels' color bytes data, in BGRA format, and info
+#[derive(Clone, PartialEq, Eq)]
 pub struct PixelsCollection<T: PixelValues<T>> {
     /// Width of the rectangle represented by the color bytes
     pub width :usize,
     /// Height of the rectangle represented by the color bytes
     pub height :usize,
     /// Units of color bytes necessary to build a single row of pixels in the rectangle of pixels
+    /// To consider "(y * image.width + x) * units_per_pixel()" instead of "image.row_length * y + 4 * x", it removes the need for this field.
     pub row_length :usize,
     /// Vec of bytes containing pixels' color data
     pub bytes :Vec<T>,
@@ -264,6 +261,74 @@ impl PixelsCollection<u8> {
                     vec_adjusted.extend_from_slice(&[blue, green, red, alpha_adjusted]);
                 }
                 // pixel is white, so make it transparent. add lowest BGR values to keep the bytes all with the same BGR values, and only change the Alpha
+                else {
+                    vec_adjusted.extend_from_slice(&[blue, green, red, 0]);
+                }
+            }
+            // pixel has some transparency (Alpha < 255), leave it as is
+            else {
+                vec_adjusted.extend_from_slice(&[blue, green, red, alpha]);
+            }
+    
+            i += 4;
+        }
+        return vec_adjusted;
+    }
+    /// Blacks become transparent, range from black to highest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
+    pub fn black_background_to_transparency_gradient(vec :&Vec<u8>) -> Vec<u8> {
+        let mut vec_adjusted :Vec<u8> = Vec::with_capacity(vec.len());
+    
+        let mut j = 0;
+        // get Alpha Rred Green Blue values
+        let mut highest_blue = 0;
+        let mut highest_green = 0;
+        let mut highest_red = 0;
+        for _ in 0..vec.len()/4 {
+            if vec[j] > highest_blue {
+                highest_blue = vec[j];
+            }
+            if vec[j+1] > highest_green {
+                highest_green = vec[j+1];
+            }
+            if vec[j+2] > highest_red {
+                highest_red = vec[j+2];
+            }
+            j += 4;
+        }
+        let mut highest_val = 0;
+        let mut highest_val_index = 0;
+        if highest_blue > highest_val {
+            highest_val = highest_blue;
+            highest_val_index = 0;
+        }
+        if highest_green > highest_val {
+            highest_val = highest_green;
+            highest_val_index = 1;
+        }
+        if highest_red > highest_val {
+            highest_val = highest_red;
+            highest_val_index = 2;
+        }
+    
+        let mut i = 0;
+        for _ in 0..vec.len()/4 {
+            // get Alpha Rred Green Blue values
+            let blue = vec[i];
+            let green = vec[i+1];
+            let red = vec[i+2];
+            let alpha = vec[i+3];
+            // if pixel has full opacity (no transparency, Alpha is at it's max : 255 (u8))
+            if alpha == 255 {
+                // and pixel is not black (B=G=R == 0)
+                if blue > 0 || green > 0 || red > 0 {
+                    // we need to adjust the values of the RGB bytes
+    
+                    // get the byte we need as adjusting base (this color's byte which in the whole image reached the highest value (B or G or R))
+                    let this_val = vec[i + highest_val_index];
+                    let alpha_adjusted = (highest_val - (highest_val - this_val)) as u8;
+                    vec_adjusted.extend_from_slice(&[blue, green, red, alpha_adjusted]);
+                }
+                // pixel is black, so make it transparent. add highest BGR values to keep the bytes all with the same BGR values, and only change the Alpha
                 else {
                     vec_adjusted.extend_from_slice(&[blue, green, red, 0]);
                 }
