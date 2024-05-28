@@ -6,8 +6,8 @@ use pixel_caster::bgra_management::{SwitchBytes, bytes_matchers};
 /// Gets a PixelsCollection from a .png, then attempts to create a CharsCollection from it
 fn png_to_char_collection() {
     let image = PixelsCollection::<u8>::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
-    
-    let transparent_green_chars_transparent_background = image.try_create_char_collection(10, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
+
+    let transparent_green_chars_transparent_background = image.try_create_char_collection(10, r#"abcdefghijklmnopqrstuvwxyz,.?!0123456789-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
 
     match transparent_green_chars_transparent_background {
         Ok(transparent_green_chars_transparent_background) => {
@@ -21,12 +21,12 @@ fn png_to_char_collection() {
                 PixelsSendMode::AlphaEnabled
             );
             // export the string as .png
-            // image::save_buffer_with_format(format!("{}{}", "fonts/exports/", "test_improvement.png"), &vec_u8_managing::bgra_u8_to_rgba_u8(&string_from_string_png.pixels.bytes), string_from_string_png.pixels.width as u32, string_from_string_png.pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();        
+            // image::save_buffer_with_format(format!("{}{}", "fonts/exports/", "test_improvement.png"), &vec_u8_managing::<u8>::swap_blue_with_red(&string_from_string_png.pixels.bytes), string_from_string_png.pixels.width as u32, string_from_string_png.pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();        
             
             transparent_green_chars_transparent_background.export_as_pngs("fonts/exports/from_transparent_green_40px_chars_sample__transparent_background/transparent_green__transparent_background").unwrap();
             
             // export the first char as .png
-            // image::save_buffer_with_format(format!("{}{}", "fonts/exports/", "first_char_export.png"), &vec_u8_managing::bgra_u8_to_rgba_u8(&transparent_green_chars_transparent_background.chars[0].pixels.bytes), transparent_green_chars_transparent_background.chars[0].pixels.width as u32, transparent_green_chars_transparent_background.chars[0].pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();        
+            // image::save_buffer_with_format(format!("{}{}", "fonts/exports/", "first_char_export.png"), &vec_u8_managing::<u8>::swap_blue_with_red(&transparent_green_chars_transparent_background.chars[0].pixels.bytes), transparent_green_chars_transparent_background.chars[0].pixels.width as u32, transparent_green_chars_transparent_background.chars[0].pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();        
         },
         Err(err) => print!("{}", err),
     }
@@ -34,7 +34,7 @@ fn png_to_char_collection() {
 
     let image = PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     
-    let opaque_grey_scale_chars_white_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible_not_white);
+    let opaque_grey_scale_chars_white_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!0123456789-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible_not_white);
 
     match opaque_grey_scale_chars_white_background {
         Ok(mut opaque_grey_scale_chars_white_background) => {
@@ -56,7 +56,7 @@ fn png_to_char_collection() {
     image.bytes = PixelsCollection::white_background_to_transparency_gradient(&image.bytes);
     image.set_bgr(0, 0, 0); // set the color to black
 
-    let transparent_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
+    let transparent_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!0123456789-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
 
     match transparent_black_chars_transparent_background {
         Ok(transparent_black_chars_transparent_background) => {
@@ -72,7 +72,7 @@ fn png_to_char_collection() {
     let mut image = PixelsCollection::<u8>::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
     PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
 
-    let threshold_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
+    let threshold_black_chars_transparent_background = image.try_create_char_collection(6, r#"abcdefghijklmnopqrstuvwxyz,.?!0123456789-+/*\_@#()[]{};:"£$%&='^"#, 5, bytes_matchers::visible);
 
     match threshold_black_chars_transparent_background {
         Ok(threshold_black_chars_transparent_background) => {
@@ -237,16 +237,11 @@ fn test_get_bytes() {
     let area_width = 200;
     let area_height = 200;
     
-    // the provided Vec must already have the necessary length to host the values.
-    // Which can be obtained either by manually setting its length :
-    let mut vec_u8_size_set = Vec::<u8>::with_capacity((area_width * area_height * <u8>::units_per_pixel() as u32) as usize);
-    unsafe { vec_u8_size_set.set_len(vec_u8_size_set.capacity()); }
-    
-    // or by pre populating it with the needed number of values to reach the needed size :
-    let mut vec_u8_pre_populated = vec![0 as u8; (area_width * area_height * <u8>::units_per_pixel() as u32) as usize];
+    // The provided Vec must already have the necessary length to host the values.
+    let mut bytes = <u8 as PixelValues<u8>>::initialize_vec(area_width, area_height);
 
-    let screen = Screen::<u8>::new(screen_area_upperleftcorner_x, screen_area_upperleftcorner_y, area_width, area_height);
-    screen.scan_area_onto_vec(&mut vec_u8_pre_populated).unwrap();
+    let screen = Screen::<u8>::new(screen_area_upperleftcorner_x, screen_area_upperleftcorner_y, area_width as u32, area_height as u32);
+    screen.scan_area_onto_vec(&mut bytes).unwrap();
 
-    Screen::update_area_custom(&vec_u8_pre_populated, 10, 10, area_width as u32, area_height as u32, pixel_caster::PixelsSendMode::AlphaEnabled);
+    Screen::update_area_custom(&bytes, 10, 10, area_width as u32, area_height as u32, pixel_caster::PixelsSendMode::AlphaEnabled);
 }
