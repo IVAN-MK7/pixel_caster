@@ -183,13 +183,13 @@ mod tests {
     fn string_of_chars_with_highest_char_sides() {
 
         //let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
-        let image_transparent_bkgrnd = PixelsCollection::<u8>::from_png("P:/gi_link/media/transparent_white_chars__transparent_background.png").unwrap();
+        let image_transparent_bkgrnd = PixelsCollection::<u8>::from_png("fonts/exports/transparent_green_40px_chars_sample__transparent_background.png").unwrap();
         //let image_transparent_bkgrnd = PixelsCollection::from_png("media/chars_sample_40px_blue_whitebackground.png").unwrap();
         // send_bytes(&image_white_bkgrnd.bytes, &(image_white_bkgrnd.width as i32), &(image_white_bkgrnd.height as i32), &0, &0, 255);
         
         let buffer = image_transparent_bkgrnd.bytes.clone();
         let min_px_space_btwn_chars = 8;
-        let chars_string = r#"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.?!0123456789-+/*\_@#()[]{};:"#;
+        let chars_string = r#"abcdefghijklmnopqrstuvwxyz,.?!0123456789-+/*\_@#()[]{};:"£$%&='^"#;
         // a b c d e f g h i j k l m n o p q r s t u v w x y z , . ? ! 0 1 2 3 4 5 6 7 8 9 0 - + / * \ _ @ # ( ) [ ] { } ; : " £ $ % & = ' ^
 
         let height = image_transparent_bkgrnd.height;
