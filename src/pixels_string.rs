@@ -6,52 +6,77 @@ use crate::{add_limited, bgra_management::*, PixelValues, BGRA_INVISIBLE_PIXEL};
 /// added because PixelsCollection was moved to a new module, "pub" in order to make it callable from this module pixels_string::PixelsCollection for backwards compatibility, to remove at version 2.0
 pub use crate::PixelsCollection;
 
-/// Tries to get the same amount of characters provided in chars_string from the whole PixelsCollection
-/// from a starting pixel scans an area of the given range and gets the pixels that pass the bgra_matcher
-/// with those pixels creates the most little rectange that still comprehends them
-/// returns the rectangle as a Vec<u8>, there is an option to return a Vec<Vec<u8>>
-/// start_x/y from 0 to width/height, range_x/y max as width/height
-pub fn char_collection_from_image(buffer :&Vec<u8>, height :usize, mut start_x :usize, start_y :usize, mut range_x :usize, range_y :usize, min_px_space_btwn_chars :usize, chars_string :&str, space_char_width :u32, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> Result<CharsCollection<u8>, String> {
-    
-    // edges, cardinal points of the range of pixels that pass the bgra_matcher (e.g. : bgra_matchers::visible = which werent transparent, where A > 0)
-    let img_visible_range = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, range_x, bgra_matcher);
-    
-    let original_range_x = range_x;
 
-    let mut char_u8_vec = CharsCollection { chars: Vec::new(), path : "".to_string(), bgra : BGRA(0,0,0,255)};
-
-    for char in chars_string.chars() {
-
-        // this char's cardinal points
-        let values = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, bgra_matcher);
-        
-        // with this char's cardinal points creates the most little range that still comprehends them and using that
-        // creates a Vec<u8> that will be populated only with this character's pixels. those not passing the matcher will have their color set to BGRA_INVISIBLE_PIXEL (B=G=R=A=0)
-        let (pixels_captured, _) = pixel_grabber(&buffer, height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, bgra_matcher);
-        
-        // add this character to the collection
-        char_u8_vec.chars.push(PixelsChar {char, char_name: CHARS.get_char_name_by_char(char).unwrap(), pixels: PixelsCollection::<u8>::create(values.right_x-values.left_x+1, values.bottom_y-img_visible_range.top_y+1, pixels_captured).unwrap() });
-        
-        // println!("printing: char:{}, {}", char, char_u8_vec.chars.last().unwrap().char);
-        //image::save_buffer_with_format(format!("fonts/exports/chars/{}.png", char_u8_vec.chars.last().unwrap().char_name), &<u8>::swap_blue_with_red(&char_u8_vec.chars.last().unwrap().pixels.bytes), char_u8_vec.chars.last().unwrap().pixels.width as u32, char_u8_vec.chars.last().unwrap().pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
-    
-        if char == chars_string.chars().last().unwrap() {
-            break;
-        }
-
-        // adjust the range of the image in which search for the next character
-        start_x = values.right_x + min_px_space_btwn_chars;
-        if start_x > original_range_x {
-            return Err("Could not retrieve all the characters".to_owned());
-        }
-        range_x = original_range_x - start_x;
-    }
-    if char_u8_vec.chars.iter().find(|r| r.char == ' ').is_none() {
-        char_u8_vec.chars.push(PixelsChar {char: ' ', char_name: CHARS.get_char_name_by_char(' ').unwrap(), pixels: PixelsCollection::<u8>::create(space_char_width as usize, char_u8_vec.chars[0].pixels.height, vec![0; space_char_width as usize * char_u8_vec.chars[0].pixels.height as usize * 4]).unwrap() });
-    }
-
-    return Ok(char_u8_vec);
+pub struct CharsCollectionCreator<'a> {
+    pixels_collection: &'a PixelsCollection<u8>,
+    start_x: usize,
+    start_y: usize,
+    range_x: usize,
+    range_y: usize,
+    min_px_space_between_chars: usize,
+    chars_string: &'a str,
+    space_char_width: u32,
+    bgra_matcher: fn(u8, u8, u8, u8) -> bool
 }
+
+impl<'a> CharsCollectionCreator<'a> {
+    /// Tries to get the same amount of characters provided in chars_string from the whole `PixelsCollection`.
+    /// Scans an area of the given range from the provided coordinates and gets the pixels that pass the bgra_matcher,
+    /// with those pixels creates the most little rectange that still comprehends them.
+    pub fn create(&self) -> Result<CharsCollection<u8>, String> {
+
+        let Self {
+            pixels_collection,
+            mut start_x,
+            start_y,
+            mut range_x,
+            range_y,
+            min_px_space_between_chars,
+            chars_string,
+            space_char_width,
+            bgra_matcher
+        } = *self;
+    
+        // edges, cardinal points of the range of pixels that pass the bgra_matcher (e.g. : bgra_matchers::visible = which werent transparent, where A > 0)
+        let img_visible_range = get_cardinal_points_until_nonestreak_x(&pixels_collection.bytes, pixels_collection.height, start_x, start_y, range_x, range_y, range_x, bgra_matcher);
+        
+        let original_range_x = range_x;
+    
+        let mut char_u8_vec = CharsCollection { chars: Vec::new(), path : "".to_string(), bgra : BGRA(0,0,0,255)};
+    
+        for char in chars_string.chars() {
+    
+            // this char's cardinal points
+            let values = get_cardinal_points_until_nonestreak_x(&pixels_collection.bytes, pixels_collection.height, start_x, start_y, range_x, range_y, min_px_space_between_chars, bgra_matcher);
+            
+            // with this char's cardinal points creates the most little range that still comprehends them and using that
+            // creates a Vec<u8> that will be populated only with this character's pixels. those not passing the matcher will have their color set to BGRA_INVISIBLE_PIXEL (B=G=R=A=0)
+            let (pixels_captured, _) = pixel_grabber(&pixels_collection.bytes, pixels_collection.height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, bgra_matcher);
+            
+            // add this character to the collection
+            char_u8_vec.chars.push(PixelsChar {char, char_name: CHARS.get_char_name_by_char(char).unwrap(), pixels: PixelsCollection::<u8>::create(values.right_x-values.left_x+1, values.bottom_y-img_visible_range.top_y+1, pixels_captured).unwrap() });
+            
+            // println!("printing: char:{}, {}", char, char_u8_vec.chars.last().unwrap().char);
+            //image::save_buffer_with_format(format!("fonts/exports/chars/{}.png", char_u8_vec.chars.last().unwrap().char_name), &<u8>::swap_blue_with_red(&char_u8_vec.chars.last().unwrap().pixels.bytes), char_u8_vec.chars.last().unwrap().pixels.width as u32, char_u8_vec.chars.last().unwrap().pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
+        
+            if char == chars_string.chars().last().unwrap() {
+                break;
+            }
+    
+            // adjust the range of the image in which search for the next character
+            start_x = values.right_x + min_px_space_between_chars;
+            if start_x > original_range_x {
+                return Err("Could not retrieve all the characters".to_owned());
+            }
+            range_x = original_range_x - start_x;
+        }
+
+        char_u8_vec.chars.push(PixelsChar {char: ' ', char_name: CHARS.get_char_name_by_char(' ').unwrap(), pixels: PixelsCollection::<u8>::create(space_char_width as usize, char_u8_vec.chars[0].pixels.height, vec![0; space_char_width as usize * char_u8_vec.chars[0].pixels.height * 4]).unwrap() });
+    
+        Ok(char_u8_vec)
+    }
+}
+
 
 
 #[cfg(test)]
@@ -157,17 +182,15 @@ mod tests {
             crate::Screen::update_area_custom(&bytes_chars_poles, 0, ((range_y + 10)*4) as i32, original_range_x as u32, range_y as u32, PixelsSendMode::AlphaEnabled);
         }
 
-        if char_u8_vec.chars.iter().find(|r| r.char == ' ').is_none() {
-            char_u8_vec.chars.push(PixelsChar {char: ' ', char_name: String::from("space"), pixels: PixelsCollection::<u8>::create(space_char_width, char_u8_vec.chars[0].pixels.height, vec![0; space_char_width as usize * char_u8_vec.chars[0].pixels.height as usize * 4]).unwrap() });
-        }
-
-        // crate::send_bytes(&char_u8_vec.chars[0].bgra_bytes, &(char_u8_vec.chars[0].width as i32), &(char_u8_vec.chars[0].height as i32), &10, &10, 255);
-
         assert_eq!(
-            char_u8_vec.chars.len(), chars_string.len(),
+            char_u8_vec.chars.len(), chars_string.chars().count(),
             "Could not retrieve all the characters ({}/{} retrieved)",
-            char_u8_vec.chars.len(), chars_string.len()
+            char_u8_vec.chars.len(), chars_string.chars().count()
         );
+
+        char_u8_vec.chars.push(PixelsChar {char: ' ', char_name: String::from("space"), pixels: PixelsCollection::<u8>::create(space_char_width, char_u8_vec.chars[0].pixels.height, vec![0; space_char_width as usize * char_u8_vec.chars[0].pixels.height as usize * 4]).unwrap() });
+        
+        // crate::send_bytes(&char_u8_vec.chars[0].bgra_bytes, &(char_u8_vec.chars[0].width as i32), &(char_u8_vec.chars[0].height as i32), &10, &10, 255);
 
         let strings_from_string_png = Vec::from([
             char_u8_vec.create_pixels_string("testing generated_text!^", 3)
@@ -470,14 +493,25 @@ impl PixelsCollection<u8> {
         }
     }
     /// Tries to get the same amount of characters provided in chars_string from the whole PixelsCollection
-    pub fn try_create_char_collection(&self, min_px_space_btwn_chars :usize, chars_string :&str, space_char_width :u32, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> Result<CharsCollection<u8>, String> {
+    pub fn try_create_char_collection(&self, min_px_space_between_chars :usize, chars_string :&str, space_char_width :u32, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> Result<CharsCollection<u8>, String> {
 
         let start_x = 0;
         let start_y = 0;
         let range_x = self.width;
         let range_y = self.height;
         
-        match char_collection_from_image(&self.bytes, self.height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, chars_string, space_char_width, bgra_matcher) {
+        let char_coll_creator = CharsCollectionCreator {
+            pixels_collection: self,
+            start_x,
+            start_y,
+            range_x,
+            range_y,
+            min_px_space_between_chars,
+            chars_string,
+            space_char_width,
+            bgra_matcher,
+        };
+        match char_coll_creator.create() {
             Ok(mut coll) => {
                 coll.bgra = image_lowest_visible_bgr(&self.bytes);
                 Ok(coll)
