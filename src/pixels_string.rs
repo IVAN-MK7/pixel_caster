@@ -21,6 +21,7 @@ pub fn char_collection_from_image(buffer :&Vec<u8>, height :usize, mut start_x :
     let mut char_u8_vec = CharsCollection { chars: Vec::new(), path : "".to_string(), bgra : BGRA(0,0,0,255)};
 
     for char in chars_string.chars() {
+
         // this char's cardinal points
         let values = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, bgra_matcher);
         
@@ -30,7 +31,10 @@ pub fn char_collection_from_image(buffer :&Vec<u8>, height :usize, mut start_x :
         
         // add this character to the collection
         char_u8_vec.chars.push(PixelsChar {char, char_name: CHARS.get_char_name_by_char(char).unwrap(), pixels: PixelsCollection::<u8>::create(values.right_x-values.left_x+1, values.bottom_y-img_visible_range.top_y+1, pixels_captured).unwrap() });
-
+        
+        // println!("printing: char:{}, {}", char, char_u8_vec.chars.last().unwrap().char);
+        //image::save_buffer_with_format(format!("fonts/exports/chars/{}.png", char_u8_vec.chars.last().unwrap().char_name), &<u8>::swap_blue_with_red(&char_u8_vec.chars.last().unwrap().pixels.bytes), char_u8_vec.chars.last().unwrap().pixels.width as u32, char_u8_vec.chars.last().unwrap().pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
+    
         if char == chars_string.chars().last().unwrap() {
             break;
         }
@@ -65,16 +69,16 @@ mod tests {
         // send_bytes(&image_white_bkgrnd.bytes, &(image_white_bkgrnd.width as i32), &(image_white_bkgrnd.height as i32), &0, &0, 255);
         
         let buffer = PixelsCollection::white_background_to_transparency_gradient(&image_transparent_bkgrnd.bytes);
+        let min_px_space_btwn_chars = 10;
+        let chars_string = r#"abcdefghijklmnopqrstuvwxyz,.?!0123456789-+/*\_@#()[]{};:"£$%&='^"#;
+        // a b c d e f g h i j k l m n o p q r s t u v w x y z , . ? ! 0 1 2 3 4 5 6 7 8 9 0 - + / * \ _ @ # ( ) [ ] { } ; : " £ $ % & = ' ^
+        let space_char_width = 10;
+
         let height = image_transparent_bkgrnd.height;
         let mut start_x = 0;
         let start_y = 0;
         let mut range_x = image_transparent_bkgrnd.width;
         let range_y = image_transparent_bkgrnd.height;
-        let min_px_space_btwn_chars = 10;
-        let chars_string = r#"abcdefghijklmnopqrstuvwxyz,.?!01234567890-+/*\_@#()[]{};:"£$%&='^"#;
-        // a b c d e f g h i j k l m n o p q r s t u v w x y z , . ? ! 0 1 2 3 4 5 6 7 8 9 0 - + / * \ _ @ # ( ) [ ] { } ; : " £ $ % & = ' ^
-        let space_char_width = 0;
-
 
         // range the extreme pixels which werent transparent (where A > 0)
         let img_visible_range = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, range_x, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
@@ -129,10 +133,6 @@ mod tests {
                 pixels_captured_clone.set_addresses_bgra(&vec_addresses_char_relative, 0, 0, 255, 255);
                 crate::Screen::update_area_custom(&mut pixels_captured_clone, 0, ((range_y + 10)*3) as i32,(values.right_x - values.left_x) as u32 +1, (values.bottom_y - img_visible_range.top_y) as u32 +1, PixelsSendMode::AlphaEnabled);
                 
-                
-                // export Vec<u8> bytes into .png with image formatting
-                // image::save_buffer_with_format(format!("{}{}", "media/", "A_transparent_whites.png"), &bgra_u8_to_rgba_u8(&pixels_captured), range_x as u32, *range_y as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
-
             }
 
             char_u8_vec.chars.push(PixelsChar {char, char_name: String::from(char), pixels: PixelsCollection::<u8>::create(values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, pixels_captured).unwrap() });
@@ -177,6 +177,95 @@ mod tests {
     }
 
 
+    // TO DO: remove this fn, it was just for temp purpose, prints a gold pixel on the top left and top right side of each char at the height of the heighest char starting from each char's bottom
+
+    #[test]
+    fn string_of_chars_with_highest_char_sides() {
+
+        //let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+        let image_transparent_bkgrnd = PixelsCollection::<u8>::from_png("P:/gi_link/media/transparent_white_chars__transparent_background.png").unwrap();
+        //let image_transparent_bkgrnd = PixelsCollection::from_png("media/chars_sample_40px_blue_whitebackground.png").unwrap();
+        // send_bytes(&image_white_bkgrnd.bytes, &(image_white_bkgrnd.width as i32), &(image_white_bkgrnd.height as i32), &0, &0, 255);
+        
+        let buffer = image_transparent_bkgrnd.bytes.clone();
+        let min_px_space_btwn_chars = 8;
+        let chars_string = r#"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ,.?!0123456789-+/*\_@#()[]{};:"#;
+        // a b c d e f g h i j k l m n o p q r s t u v w x y z , . ? ! 0 1 2 3 4 5 6 7 8 9 0 - + / * \ _ @ # ( ) [ ] { } ; : " £ $ % & = ' ^
+
+        let height = image_transparent_bkgrnd.height;
+        let mut start_x = 0;
+        let start_y = 0;
+        let mut range_x = image_transparent_bkgrnd.width;
+        let range_y = image_transparent_bkgrnd.height;
+
+        // range the extreme pixels which werent transparent (where A > 0)
+        let img_visible_range = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, range_x, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+        
+        let original_range_x = range_x;
+
+        let mut bytes_chars_poles = buffer.clone();
+
+        let mut highest_height = 0;
+
+        for char in chars_string.chars() {
+            
+            let values = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+            
+            // +1 because start and end values are included in the area, therefore if an area's first pixel is at 0 and it's last at 9 its range is 10, range is 9-0+1. Another e.g.: x starts at 10, ends at 40 : area = 31; 40 - 10 + 1
+            let (mut pixels_captured, char_values) = pixel_grabber(&buffer, height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+            
+            if DISPLAY_RESULTS {
+                let vec_pos_char = vec![(values.left_x, img_visible_range.top_y), (values.left_x, img_visible_range.bottom_y), (values.right_x, img_visible_range.top_y), (values.right_x, img_visible_range.bottom_y)];
+                bytes_chars_poles.set_positions_bgra(height, &vec_pos_char, 0, 255, 0, 255);
+                let vec_pos_char_strict = vec![(values.left_x, values.top_y), (values.left_x, values.bottom_y), (values.right_x, values.top_y), (values.right_x, values.bottom_y)];
+                bytes_chars_poles.set_positions_bgra(height, &vec_pos_char_strict, 170, 255, 170, 255);
+                let vec_addresses_char = vec![values.top_y_index, values.left_x_index, values.right_x_index, values.bottom_y_index];
+                bytes_chars_poles.set_addresses_bgra(&vec_addresses_char, 0, 0, 255, 255);
+                
+                highest_height = std::cmp::max(highest_height, char_values.bottom_y - char_values.top_y);
+            }
+
+            if char == chars_string.chars().last().unwrap() {
+                break;
+            }
+
+            start_x = values.right_x + min_px_space_btwn_chars;
+            if start_x > original_range_x {
+                break;
+            }
+            range_x = original_range_x - start_x;
+        }
+
+        
+        let mut start_x = 0;
+        let mut range_x = image_transparent_bkgrnd.width;
+
+        for char in chars_string.chars() {
+            
+            let values = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+            
+            if DISPLAY_RESULTS {
+
+                let heighest_char_top_from_this_char_bottom_side_marks = vec![(values.left_x-2, values.bottom_y - highest_height), (values.right_x+2, values.bottom_y - highest_height)];
+                bytes_chars_poles.set_positions_bgra(height, &heighest_char_top_from_this_char_bottom_side_marks, 161, 248, 255, 255);
+                
+                crate::Screen::update_area_custom(&bytes_chars_poles,  0, (range_y + 10) as i32, original_range_x as u32, range_y as u32, PixelsSendMode::AlphaEnabled);
+
+            }
+            if char == chars_string.chars().last().unwrap() {
+                break;
+            }
+
+            start_x = values.right_x + min_px_space_btwn_chars;
+            if start_x > original_range_x {
+                break;
+            }
+            range_x = original_range_x - start_x;
+        }
+
+        image::save_buffer_with_format("fonts/exports/with_poles.png", &<u8>::swap_blue_with_red(&mut bytes_chars_poles), image_transparent_bkgrnd.width as u32, image_transparent_bkgrnd.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
+
+    }
 
 
 
@@ -192,7 +281,7 @@ mod tests {
     }
 }
 
-
+#[derive(Clone)]
 pub struct CardinalPoints {
     pub top_y :usize,
     pub top_y_index :usize,
@@ -202,6 +291,63 @@ pub struct CardinalPoints {
     pub left_x_index :usize,
     pub bottom_y :usize,
     pub bottom_y_index :usize
+}
+
+impl CardinalPoints {
+    /// If the provided point is lesser than the leftest cardinal point, it's value and index will be set to the leftest point's coordinates.
+    /// If the provided point is greater than the rightest cardinal point, it's value and index will be set to the rightest point's coordinates.
+    pub fn update_if_expands_horizontal(&mut self, point: usize, index: usize) {
+        if point < self.left_x {
+            self.left_x = point;
+            self.left_x_index = index;
+        }
+        if point > self.right_x {
+            self.right_x = point;
+            self.right_x_index = index;
+        }
+    }
+
+    /// If the provided point is lesser than the top cardinal point, it's value and index will be set to the top point's coordinates.
+    /// If the provided point is greater than the bottom cardinal point, it's value and index will be set to the bottom point's coordinates.
+    pub fn update_if_expands_vertical(&mut self, point: usize, index: usize) {
+        if point < self.top_y {
+            self.top_y = point;
+            self.top_y_index = index;
+        }
+        if point > self.bottom_y {
+            self.bottom_y = point;
+            self.bottom_y_index = index;
+        }
+    }
+
+    /// If the provided CardinalPoints' have some outermost values than the self's, these will be set as the new values.
+    pub fn update_if_expands_from_cardinal_points(&mut self, c_p: &CardinalPoints) {
+        self.update_if_expands_horizontal(c_p.left_x, c_p.left_x_index);
+        self.update_if_expands_horizontal(c_p.right_x, c_p.right_x_index);
+        self.update_if_expands_vertical(c_p.top_y, c_p.top_y_index);
+        self.update_if_expands_vertical(c_p.bottom_y, c_p.bottom_y_index);
+    }
+}
+
+impl Default for CardinalPoints {
+    fn default() -> Self {
+        Self {
+            top_y : usize::MAX,
+            top_y_index : 0,
+            right_x : 0,
+            right_x_index : 0,
+            left_x : usize::MAX,
+            left_x_index : 0,
+            bottom_y : 0,
+            bottom_y_index : 0
+        }
+    }
+}
+
+impl std::fmt::Debug for CardinalPoints {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CardinalPoints").field("top_y", &self.top_y).field("top_y_index", &self.top_y_index).field("right_x", &self.right_x).field("right_x_index", &self.right_x_index).field("left_x", &self.left_x).field("left_x_index", &self.left_x_index).field("bottom_y", &self.bottom_y).field("bottom_y_index", &self.bottom_y_index).finish()
+    }
 }
 
 /// returns the cardinal points of given range of which pixels match a condition
@@ -243,7 +389,7 @@ pub fn get_cardinal_points_until_nonestreak_x(buffer :&Vec<u8>, height :usize, s
                 }
             }
         }
-        if values.right_x > start_x && x > values.right_x + none_streak_x {
+        if values.right_x > start_x && x >= values.right_x + none_streak_x {
             break;
         }
     }
@@ -388,7 +534,7 @@ pub fn png_into_pixels_collection (png_path :&str) -> Result<PixelsCollection<u8
     }*/
 }
 
-fn create_dir_recursive(dir_full_path : &str) -> std::io::Result<()> {
+pub fn create_dir_recursive(dir_full_path : &str) -> std::io::Result<()> {
     fs::create_dir_all(dir_full_path)?;
     Ok(())
 }
@@ -609,7 +755,7 @@ fn find_key_for_value(map: &std::collections::HashMap<String, char>, value: char
     map.iter()
         .find_map(|(key, &val)| if val == value { Some(key.to_owned()) } else { None })
 }
-trait CharsHashmap {
+pub trait CharsHashmap {
     fn get_char_by_char_name_with_default(&self, char_name :&str) -> char;
     fn get_char_name_by_char(&self, char :char) -> Option<String>;
 }
@@ -642,7 +788,7 @@ impl CharsHashmap for std::collections::HashMap<String, char> {
 
 lazy_static! {
     /// Default hashmap with the character names and the char value each of them refers to
-    static ref CHARS: std::collections::HashMap<String, char> = {
+    pub static ref CHARS: std::collections::HashMap<String, char> = {
         let mut chars = std::collections::HashMap::new();
 
         // https://www.charset.org/utf-8
