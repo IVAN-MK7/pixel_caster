@@ -5,7 +5,7 @@ extern crate eager;
 #[macro_use]
 extern crate pixel_caster;
 
-use pixel_caster::{PixelsCollection, bgra_management::ColorAlteration, PixelValues};
+use pixel_caster::{bgra_management::ColorAlteration, PixelValues, PixelsCollection};
 
 #[test]
 fn main() {
@@ -63,7 +63,7 @@ fn main() {
     }
     println!("{}", now.elapsed().as_millis());
 
-    
+
     // new
     let now = std::time::Instant::now();
     for _ in 0..1000 {
@@ -71,120 +71,153 @@ fn main() {
         color_match_and_alter!(img, not_fully_opaque => low_red);
     }
     println!("{}", now.elapsed().as_millis());*/
-    
+
     create_color_matcher_or_alterator!(full_opacity (_:u8,_:u8,_:u8,a:u8) bool, (a >= 255));
-    let bgra_vec = [30_u8,120,120,255];
-    assert!(full_opacity!(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3]));
-    assert!(full_opacity(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3]));
+    let bgra_vec = [30_u8, 120, 120, 255];
+    assert!(full_opacity!(
+        bgra_vec[0],
+        bgra_vec[1],
+        bgra_vec[2],
+        bgra_vec[3]
+    ));
+    assert!(full_opacity(
+        bgra_vec[0],
+        bgra_vec[1],
+        bgra_vec[2],
+        bgra_vec[3]
+    ));
 
     /// Now we can pass the created function to a Vec method that takes a function as a statement to check on each 4 values chunks of the vector and change their values to the 4 provided ones when the statement was matched
     /// In this case all the 3 values chunks are fully opaque (Alpha = 255), therefore they all will have their 4 values alterated into the provided ones (255,255,255,255)
-    let mut bgra_3vec = vec![30_u8,120,120,255, 30_u8,120,120,255, 30_u8,120,120,255];
-    bgra_3vec.color_matcher_and_new_color(full_opacity, 255,255,255,255);
-    assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
+    let mut bgra_3vec = vec![
+        30_u8, 120, 120, 255, 30_u8, 120, 120, 255, 30_u8, 120, 120, 255,
+    ];
+    bgra_3vec.color_matcher_and_new_color(full_opacity, 255, 255, 255, 255);
+    assert_eq!(
+        bgra_3vec,
+        vec![255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
+    );
 
     create_color_matcher_or_alterator!(max_blue_full_opacity (a:u8,b:u8,_:u8,_:u8) bool, (b == 255, a == 255));
-    let abgr_vec = [255,255,0,0];
-    assert!(max_blue_full_opacity!(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3]));
-    assert!(max_blue_full_opacity(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3]));
-    
+    let abgr_vec = [255, 255, 0, 0];
+    assert!(max_blue_full_opacity!(
+        abgr_vec[0],
+        abgr_vec[1],
+        abgr_vec[2],
+        abgr_vec[3]
+    ));
+    assert!(max_blue_full_opacity(
+        abgr_vec[0],
+        abgr_vec[1],
+        abgr_vec[2],
+        abgr_vec[3]
+    ));
+
     create_color_matcher_or_alterator!(slice_full_opacity (slice, &[u8]), (b,g,r,a) bool, (a >= 255));
-    let bgra_vec = [30_u8,120,120,255];
+    let bgra_vec = [30_u8, 120, 120, 255];
     let bgra_vec_slice = &bgra_vec[0..=3];
     assert!(slice_full_opacity!(bgra_vec_slice));
     assert!(slice_full_opacity(bgra_vec_slice));
 
     ///// Now we can pass the created function to a Vec method that takes a function as a statement to check on each 4 values chunks of the vector and change their values to the 4 provided ones when the statement was matched
     ///// In this case all the 3 values chunks are fully opaque (Alpha = 255), therefore they all will have their 4 values alterated into the provided ones (255,255,255,255)
-    let mut bgra_3vec = vec![30_u8,120,120,255, 30_u8,120,120,255, 30_u8,120,120,255];
-    bgra_3vec.color_matcher_and_new_color(full_opacity, 255,255,255,255);
-    assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
+    let mut bgra_3vec = vec![
+        30_u8, 120, 120, 255, 30_u8, 120, 120, 255, 30_u8, 120, 120, 255,
+    ];
+    bgra_3vec.color_matcher_and_new_color(full_opacity, 255, 255, 255, 255);
+    assert_eq!(
+        bgra_3vec,
+        vec![255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
+    );
 
     create_color_matcher_or_alterator!(slice_max_blue_full_opacity (slice, &[u8]), (a,b,g,r) bool, (b == 255, a == 255));
-    let abgr_vec = [255_u8,255,0,0];
+    let abgr_vec = [255_u8, 255, 0, 0];
     let abgr_vec_slice = &abgr_vec[0..=3];
     assert!(slice_max_blue_full_opacity!(abgr_vec_slice));
     assert!(slice_max_blue_full_opacity(abgr_vec_slice));
 
     create_color_matcher_or_alterator!(max_blue_full_opacity_inception (a:u8,b:u8,_:u8,_:u8) bool, (b == 255, a == 255));
-    max_blue_full_opacity_inception!(255_u8,255,0,0);
+    max_blue_full_opacity_inception!(255_u8, 255, 0, 0);
 
     create_color_matcher_or_alterator!(max_blue_max_alpha (a:&mut u8,b:&mut u8,_:&mut u8,r:&mut u8) (), (b = 255_u8, a = 255_u8));
     let mut bb = 24_u8;
     let mut gg = 24_u8;
     let mut rr = 24_u8;
     let mut aa = 24_u8;
-    max_blue_max_alpha!(bb,gg,rr,aa);
-    println!("b{} g{} r{} a{}",bb,gg,rr,aa);
+    max_blue_max_alpha!(bb, gg, rr, aa);
+    println!("b{} g{} r{} a{}", bb, gg, rr, aa);
     let mut bbb = 24_u8;
     let mut ggg = 24_u8;
     let mut rrr = 24_u8;
     let mut aaa = 24_u8;
     max_blue_max_alpha(&mut bbb, &mut ggg, &mut rrr, &mut aaa);
-    println!("b{} g{} r{} a{}",bbb,ggg,rrr,aaa);
+    println!("b{} g{} r{} a{}", bbb, ggg, rrr, aaa);
 
-
-    create_color_matcher_or_alterator!(slice_max_blue_max_alpha (slice, &mut[u8]), (b,g,r,a) (), (a = 255));
-    let mut bgra_vec = vec![30_u8,120,120,33, 40,13,44,22];
+    create_color_matcher_or_alterator!(
+        slice_max_blue_max_alpha(slice, &mut [u8]),
+        (b, g, r, a)(),
+        (a = 255)
+    );
+    let mut bgra_vec = vec![30_u8, 120, 120, 33, 40, 13, 44, 22];
     slice_max_blue_max_alpha!(bgra_vec[0..=3]);
-    assert_eq!(bgra_vec[0..=3], [30_u8,120,120,255]); // asserts the macro
+    assert_eq!(bgra_vec[0..=3], [30_u8, 120, 120, 255]); // asserts the macro
     slice_max_blue_max_alpha(&mut bgra_vec[4..=7]);
-    assert_eq!(bgra_vec[4..=7], [40,13,44,255]); // asserts the function
+    assert_eq!(bgra_vec[4..=7], [40, 13, 44, 255]); // asserts the function
     println!("{:?}", bgra_vec);
 
     create_color_matcher_or_alterator!(not_fully_opaque (_:u8,_:u8,_:u8,a:u8) bool, (a < 255));
     create_color_matcher_or_alterator!(low_red (slice &mut [u8], index), (b,g,r,a) (), (b = 0, g = 0, r = 100, a = 255));
-    let mut bgra_vec = vec![30_u8,120,120,255, 40,13,44,22];
-    for _ in 0..bgra_vec.len()/4 {
+    let mut bgra_vec = vec![30_u8, 120, 120, 255, 40, 13, 44, 22];
+    for _ in 0..bgra_vec.len() / 4 {
         color_match_and_alter!(bgra_vec, not_fully_opaque => low_red);
     }
     println!("{:?}", bgra_vec);
-    assert_eq!(bgra_vec[0..=3], [30_u8,120,120,255]);
-    assert_eq!(bgra_vec[4..=7], [0,0,100,255]);
-
+    assert_eq!(bgra_vec[0..=3], [30_u8, 120, 120, 255]);
+    assert_eq!(bgra_vec[4..=7], [0, 0, 100, 255]);
 
     println!("ended");
-    
-    
+
     create_color_matcher_or_alterator!(slice_max_blue_max_alphaxxx (slice, &[u8]), (b,g,r,a) bool, (a == 255, b == 33));
-    let mut tmp = [33,120,120,255, 40,13,44,22];
+    let mut tmp = [33, 120, 120, 255, 40, 13, 44, 22];
     let res = slice_max_blue_max_alphaxxx!(tmp[0..=3]);
     println!("{}", res);
-    create_color_matcher_or_alterator!(slice_max_blue_max_alphayyy (slice, &mut [u8]), (b,g,r,a) (), (a = 100, b = 22));
-
-
+    create_color_matcher_or_alterator!(
+        slice_max_blue_max_alphayyy(slice, &mut [u8]),
+        (b, g, r, a)(),
+        (a = 100, b = 22)
+    );
 
     create_color_matcher_or_alterator!(not_fully_opaquexxxx (b:u8,g:u8,r:u8,a:u8) bool, (a < 255));
-    let mut tmpxxxx = [33,120,120,233, 40,13,44,22];
-    println!("{}", not_fully_opaquexxxx(0,0,0,tmpxxxx[3]));
+    let mut tmpxxxx = [33, 120, 120, 233, 40, 13, 44, 22];
+    println!("{}", not_fully_opaquexxxx(0, 0, 0, tmpxxxx[3]));
     create_color_matcher_or_alterator!(max_blue_max_alphayyyy (b:&mut u8,g:&mut u8,r:&mut u8,a:&mut u8) (), (b = 200_u8, a = 255_u8));
     let mut bb = 10_u8;
     let mut aa = 233_u8;
-    max_blue_max_alphayyyy(&mut bb,&mut 0,&mut 0,&mut aa);
-    max_blue_max_alphayyyy!(bb,0,0,aa);
+    max_blue_max_alphayyyy(&mut bb, &mut 0, &mut 0, &mut aa);
+    max_blue_max_alphayyyy!(bb, 0, 0, aa);
     println!("bb{} aa{}", bb, aa);
     create_color_matcher_or_alterator!(nobbb (b:u8,g:u8,r:u8,a:u8) bool, (a < 255));
-    let mut tmpxxxx = [33_u8,120,120,233, 40,13,44,22];
-    println!("fn {}", nobbb(0,0,0,tmpxxxx[3]));
-    println!("macro {}", nobbb!(0,0,0,tmpxxxx[3]));
+    let mut tmpxxxx = [33_u8, 120, 120, 233, 40, 13, 44, 22];
+    println!("fn {}", nobbb(0, 0, 0, tmpxxxx[3]));
+    println!("macro {}", nobbb!(0, 0, 0, tmpxxxx[3]));
     create_color_matcher_or_alterator!(noxxx (b:&mut u8,g:&mut u8,r:&mut u8,a:&mut u8) (), (b = 255_u8, a = 255_u8));
 
-    
     create_color_matcher_or_alterator!(tsts (b:u8,g:u8,_:u8,a:u8) bool, (a < 255));
-    let mut tmpxxxx = [33,120,120,233, 40,13,44,22];
-    println!("{}", tsts(0,0,0,tmpxxxx[3]));
-    println!("{}", tsts!(0,0,0,tmpxxxx[3]));
-    print_item_resolve_later_demonstration!(test_x (b,g,_,a), (a < 33, g > 4));
-    println!("fn (0,5,40,22) : {}", test_x(0,5,40,22));
-    println!("macro (2,4,100,66) : {}", test_x!(2,4,100,66));
-    
-    create_color_matcher_or_alterator!(all_to_zero (slice, &mut [u8]), (b,g,r,a) (), (b = 0, g = 0, r = 0));
+    let mut tmpxxxx = [33, 120, 120, 233, 40, 13, 44, 22];
+    println!("{}", tsts(0, 0, 0, tmpxxxx[3]));
+    println!("{}", tsts!(0, 0, 0, tmpxxxx[3]));
+    print_item_resolve_later_demonstration!(test_x(b, g, _, a), (a < 33, g > 4));
+    println!("fn (0,5,40,22) : {}", test_x(0, 5, 40, 22));
+    println!("macro (2,4,100,66) : {}", test_x!(2, 4, 100, 66));
+
+    create_color_matcher_or_alterator!(
+        all_to_zero(slice, &mut [u8]),
+        (b, g, r, a)(),
+        (b = 0, g = 0, r = 0)
+    );
 
     //quiqui
-    
 }
-
-
 
 #[macro_export]
 macro_rules! with_dollar_sign {
@@ -209,13 +242,14 @@ macro_rules! make_println {
     };
 }
 
-
 #[macro_export]
 macro_rules! __resolve_at_run {
-    ( $name:tt ) => { $name };
+    ( $name:tt ) => {
+        $name
+    };
 }
 
-eager_macro_rules!{ $eager_colors_matchers_and_alterators
+eager_macro_rules! { $eager_colors_matchers_and_alterators
     #[macro_export]
     macro_rules! and_operation_or_semicolon {
         ( bool ) => { && };
@@ -238,16 +272,16 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
         // println!("{}", $c1_input_type);
     }
     /// Creates a bytes matcher for 4 values (e.g. BGRA ordered bytes) in a macro and in a function form (the macro one is faster, the function one can be used as parameter)
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// create_color_matcher_or_alterator!(full_opacity ( _, _, _, a), (a >= 255));
     /// let bgra_vec = vec![30_u8,120,120,255];
     /// assert!(full_opacity!(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3])); // asserts the macro
     /// assert!(full_opacity(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3])); // asserts the function
     /// ```
-    /// 
+    ///
     /// By using the underscores in full_opacity ( _, _, _, a) the resulting function will inherit them, therefore ignoring the bytes in those positions.
     /// To see the macros built ( need to use nightly ) : cargo expand --bin *name of this .rs file* . which will result in :
     /// ```
@@ -255,14 +289,14 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     ///     a >= 255
     /// }
     /// ```
-    /// 
+    ///
     /// Now we can pass the created function to a Vec method that takes a function as a statement to check on each 4 values chunks of the vector and change their values to the 4 provided ones when the statement was matched.
     /// In this case all the 3 values chunks are fully opaque (Alpha = 255), therefore they all will have their 4 values alterated into the provided ones (255,255,255,255)
     /// ```
     /// let mut bgra_3vec = vec![30_u8,120,120,255, 30_u8,120,120,255, 30_u8,120,120,255];
     /// bgra_3vec.color_matcher_and_new_color(full_opacity, 255,255,255,255);
     /// assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
-    /// 
+    ///
     /// create_color_matcher_or_alterator!(max_blue_full_opacity (a,b,g,r), (b == 255, a == 255));
     /// let abgr_vec = vec![255,255,0,0];
     /// assert!(max_blue_full_opacity!(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3])); // asserts the macro
@@ -270,7 +304,7 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     /// ```
     /// TO DO DOCUMENTATION, example to update
     /// # Examples
-    /// 
+    ///
     /// ```
     /// create_color_matcher_or_alterator!(max_blue_max_alpha (a,b,g,r) (), (b = 255_u8, a = 255_u8));
     /// let mut bb = 24_u8;
@@ -286,24 +320,24 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     /// max_blue_max_alpha(&mut bbb, &mut ggg, &mut rrr, &mut aaa);
     /// println!("b{} g{} r{} a{}",bbb,ggg,rrr,aaa);
     /// ```
-    /// 
+    ///
     /// Creates a bytes matcher for 4 values (e.g. BGRA ordered bytes) in a macro and in a function form (the macro one is faster, the function one can be used as parameter)
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// create_color_matcher_or_alterator!(full_opacity (slice), (b,g,r,a) bool, (a >= 255));
     /// let bgra_vec = vec![30_u8,120,120,255];
     /// let bgra_vec_slice = &bgra_vec[0..=3];
     /// assert!(full_opacity!(bgra_vec_slice)); // asserts the macro
     /// assert!(full_opacity(bgra_vec_slice)); // asserts the function
-    /// 
+    ///
     /// /// Now we can pass the created function to a Vec method that takes a function as a statement to check on each 4 values chunks of the vector and change their values to the 4 provided ones when the statement was matched
     /// /// In this case all the 3 values chunks are fully opaque (Alpha = 255), therefore they all will have their 4 values alterated into the provided ones (255,255,255,255)
     /// let mut bgra_3vec = vec![30_u8,120,120,255, 30_u8,120,120,255, 30_u8,120,120,255];
     /// bgra_3vec.color_matcher_and_new_color(full_opacity, 255,255,255,255);
     /// assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
-    /// 
+    ///
     /// create_color_matcher_or_alterator!(max_blue_full_opacity (slice), (a,b,g,r) bool, (b == 255, a == 255));
     /// let abgr_vec = vec![255_u8,255,0,0];
     /// let abgr_vec_slice = &abgr_vec[0..=3];
@@ -312,7 +346,7 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     /// ```
     /// TO DO DOCUMENTATION, example to update
     /// # Examples
-    /// 
+    ///
     /// ```
     /// create_color_matcher_or_alterator!(slice_max_blue_max_alpha (slice), (b,g,r,a) (), (a = 255));
     /// let mut bgra_vec = vec![30_u8,120,120,33, 40,13,44,22];
@@ -322,9 +356,9 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     /// assert_eq!(bgra_vec[4..=7], [40,13,44,255]); // asserts the function
     /// ```
     /// TO DO DOCUMENTATION, example to update
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// create_color_matcher_or_alterator!(not_fully_opaque (_,_,_,a) bool, (a < 255));
     /// create_vec_index_alterator!(low_red (slice), (b,g,r,a) (), (b = 0, g = 0, r = 100, a = 255));
@@ -432,8 +466,6 @@ eager_macro_rules!{ $eager_colors_matchers_and_alterators
     }
 }
 
-
-
 #[macro_export]
 macro_rules! bytes_matching {
     ($bytes_matcher:ident, $b:expr, $g:expr, $r:expr, $a:expr) => {
@@ -450,43 +482,42 @@ macro_rules! bytes_alteration {
 macro_rules! color_match_and_alter {
     ($vec:expr, $if_part:ident => $true_case:ident) => {
         let mut i = 0;
-        for _ in 0..$vec.len()/(PixelValues::get_units_per_pixel(&($vec[0])) as usize) {
-            if bytes_matching!{$if_part, $vec[i], $vec[i+1], $vec[i+2], $vec[i+3]} {
-                bytes_alteration!{$true_case $vec, i}
+        for _ in 0..$vec.len() / (PixelValues::get_units_per_pixel(&($vec[0])) as usize) {
+            if bytes_matching! {$if_part, $vec[i], $vec[i+1], $vec[i+2], $vec[i+3]} {
+                bytes_alteration! {$true_case $vec, i}
             }
             i += 4;
         }
     };
     ($vec:expr, $if_part:ident => $true_case:ident ; $optional_false_case:ident) => {
         let mut i = 0;
-        for _ in 0..$vec.len()/(PixelValues::get_units_per_pixel(&($vec[0])) as usize) {
-            if bytes_matching!{$if_part, $vec[i], $vec[i+1], $vec[i+2], $vec[i+3]} {
-                bytes_alteration!{$true_case $vec, i}
-            }
-            else {
-                bytes_alteration!{$optional_false_case $vec, i}
+        for _ in 0..$vec.len() / (PixelValues::get_units_per_pixel(&($vec[0])) as usize) {
+            if bytes_matching! {$if_part, $vec[i], $vec[i+1], $vec[i+2], $vec[i+3]} {
+                bytes_alteration! {$true_case $vec, i}
+            } else {
+                bytes_alteration! {$optional_false_case $vec, i}
             }
             i += 4;
         }
     };
 }
 /// Creates a bytes matcher for 4 values (e.g. BGRA ordered bytes) in a macro and in a function form (the macro one is faster, the function one can be used as parameter)
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// create_slice_color_matcher_or_alterator!(full_opacity (slice), (b,g,r,a) bool, (a >= 255));
 /// let bgra_vec = vec![30_u8,120,120,255];
 /// let bgra_vec_slice = &bgra_vec[0..=3];
 /// assert!(full_opacity!(bgra_vec_slice)); // asserts the macro
 /// assert!(full_opacity(bgra_vec_slice)); // asserts the function
-/// 
+///
 /// /// Now we can pass the created function to a Vec method that takes a function as a statement to check on each 4 values chunks of the vector and change their values to the 4 provided ones when the statement was matched
 /// /// In this case all the 3 values chunks are fully opaque (Alpha = 255), therefore they all will have their 4 values alterated into the provided ones (255,255,255,255)
 /// let mut bgra_3vec = vec![30_u8,120,120,255, 30_u8,120,120,255, 30_u8,120,120,255];
 /// bgra_3vec.color_matcher_and_new_color(full_opacity, 255,255,255,255);
 /// assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
-/// 
+///
 /// create_slice_color_matcher_or_alterator!(max_blue_full_opacity (slice), (a,b,g,r) bool, (b == 255, a == 255));
 /// let abgr_vec = vec![255_u8,255,0,0];
 /// let abgr_vec_slice = &abgr_vec[0..=3];
@@ -495,7 +526,7 @@ macro_rules! color_match_and_alter {
 /// ```
 /// TO DO DOCUMENTATION, example to update
 /// # Examples
-/// 
+///
 /// ```
 /// create_slice_color_matcher_or_alterator!(slice_max_blue_max_alpha (slice), (b,g,r,a) (), (a = 255));
 /// let mut bgra_vec = vec![30_u8,120,120,33, 40,13,44,22];
@@ -543,9 +574,9 @@ macro_rules! create_slice_color_matcher_or_alterator {
 }
 
 /// TO DO DOCUMENTATION, example to update
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// create_color_matcher!(not_fully_opaque (_,_,_,a) bool, (a < 255));
 /// create_vec_index_alterator!(low_red (slice), (b,g,r,a) (), (b = 0, g = 0, r = 100, a = 255));
@@ -580,16 +611,16 @@ macro_rules! create_vec_index_alterator {
 }
 
 /// Creates a bytes matcher for 4 values (e.g. BGRA ordered bytes) in a macro and in a function form (the macro one is faster, the function one can be used as parameter)
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// create_color_matcher_or_alterator_4_values!(full_opacity ( _, _, _, a), (a >= 255));
 /// let bgra_vec = vec![30_u8,120,120,255];
 /// assert!(full_opacity!(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3])); // asserts the macro
 /// assert!(full_opacity(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3])); // asserts the function
 /// ```
-/// 
+///
 /// By using the underscores in full_opacity ( _, _, _, a) the resulting function will inherit them, therefore ignoring the bytes in those positions.
 /// To see the macros built ( need to use nightly ) : cargo expand --bin *name of this .rs file* . which will result in :
 /// ```
@@ -597,14 +628,14 @@ macro_rules! create_vec_index_alterator {
 ///     a >= 255
 /// }
 /// ```
-/// 
+///
 /// Now we can pass the created function to a Vec method that takes a function as a statement to check on each 4 values chunks of the vector and change their values to the 4 provided ones when the statement was matched.
 /// In this case all the 3 values chunks are fully opaque (Alpha = 255), therefore they all will have their 4 values alterated into the provided ones (255,255,255,255)
 /// ```
 /// let mut bgra_3vec = vec![30_u8,120,120,255, 30_u8,120,120,255, 30_u8,120,120,255];
 /// bgra_3vec.color_matcher_and_new_color(full_opacity, 255,255,255,255);
 /// assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
-/// 
+///
 /// create_color_matcher_or_alterator_4_values!(max_blue_full_opacity (a,b,g,r), (b == 255, a == 255));
 /// let abgr_vec = vec![255,255,0,0];
 /// assert!(max_blue_full_opacity!(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3])); // asserts the macro
@@ -612,7 +643,7 @@ macro_rules! create_vec_index_alterator {
 /// ```
 /// TO DO DOCUMENTATION, example to update
 /// # Examples
-/// 
+///
 /// ```
 /// create_color_matcher_or_alterator_4_values!(max_blue_max_alpha (a,b,g,r) (), (b = 255_u8, a = 255_u8));
 /// let mut bb = 24_u8;
@@ -707,5 +738,7 @@ macro_rules! print_item_resolve_later_demonstration {
 }
 #[macro_export]
 macro_rules! __resolve_it_at_run {
-    ( $name:tt ) => { $name };
+    ( $name:tt ) => {
+        $name
+    };
 }
