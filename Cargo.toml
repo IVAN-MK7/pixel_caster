@@ -10,15 +10,15 @@ readme = "README.md"
 categories = ["os::windows-apis"]
 license = "MIT"
 
-# for performance: 'cargo run --release -- -Ctarget-cpu=native', and uncomment below lines
-#default-run = "performance_test"
+# for performance (on Windows OS): "$env:RUSTFLAGS = '-Ctarget-cpu=native'; cargo run --release", and uncomment the lines below
 #[profile.release]
 #lto = "fat"
 #codegen-units = 1
+# end for performance
+#default-run = "performance_test"
 #[[bin]]
 #name = "main"
 #path = "src/main.rs"
-# end for performance
 
 [lib]
 name = "pixel_caster"
@@ -53,14 +53,14 @@ name = "performance_test"
 path = "tests/performance_test.rs"
 
 [dependencies]
-libc = "0.2.147"
+libc = "0.2.155"
 image = { version = "0.25.1", optional = true }
 lazy_static = { version = "1.4.0", optional = true }
 #pixel_caster = { path = "../pixel_caster", default-features = false  } default-features = false : to not use the pixels_string feature (and its relative dependencies/optional features, like the "image" crate). path instead of version to load the locally store crate
 
 [dev-dependencies]
 eager = "0.1.0"
-paste = "1.0.14"
+paste = "1.0.15"
 
 
 [features]
