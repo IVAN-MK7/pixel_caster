@@ -19,7 +19,7 @@ fn main (){
     // each pixel's Alpha value can be any value, since with the following function every pixel will have Alpha automatically set to 255
     // therefore the pixels Alpha channel (trasparency) is disabled, so each pixel has full opacity (Alpha = 255)
     Screen::update_area_custom(
-        &mut vec,
+        &vec,
         screen_destination_area_upperleftcorner_x, 
         screen_destination_area_upperleftcorner_y,
         pixels_area_width as u32,
@@ -27,8 +27,7 @@ fn main (){
         PixelsSendMode::AlphaDisabled
     );
 
-    println!("");
-    println!("A Vec<u8> containing 64 bytes, representing a qube of 4 x 4 (16) pixels, where the first 2 are red, the other 14 blue, will now be sent to the screen at the location :");
+    println!("\r\nA Vec<u8> containing 64 bytes, representing a qube of 4 x 4 (16) pixels, where the first 2 are red, the other 14 blue, will now be sent to the screen at the location :");
     println!("X : {}, Y : {}", screen_destination_area_upperleftcorner_x, screen_destination_area_upperleftcorner_y);
     println!("The first pixel has the following RGBA values : R:{} G:{} B:{} A:{}", vec[2], vec[1], vec[0], vec[3]);
 }

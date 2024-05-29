@@ -76,11 +76,9 @@ pub fn get_bytes<T: PixelValues<T>>(area_width :u32, area_height :u32, src_ul_x 
         // An application should always replace a new object with the original,
         // default object after it has finished drawing with the new object.
         SelectObject(dst_screen, hbmp_replace);
-        DeleteDC(dst_screen);
-        DeleteObject(captured_hbmp);
-        return vec;
-    
-
+        DeleteDC(dst_screen).unwrap();
+        DeleteObject(captured_hbmp).unwrap();
+        vec
     }
 }
 
@@ -88,7 +86,7 @@ pub fn get_bytes<T: PixelValues<T>>(area_width :u32, area_height :u32, src_ul_x 
 /// source_constant_alpha sets the Alpha value of every BGRA (so it sets the whole image's opacity , range : 0-255)
 /// set source_constant_alpha to 255 in order to use per-pixel alpha values
 /// The color chunks must be in BGRA, if Vec<u32> and the CPU has little endian then the color chunks must be in ARGB
-pub fn send_bytes<T: PixelValues<T> + Copy>(vec :&Vec<T>, area_width :u32, area_height :u32, dst_ul_x :i32, dst_ul_y :i32, source_constant_alpha :u8) {
+pub fn send_bytes<T: PixelValues<T> + Copy>(vec :&[T], area_width :u32, area_height :u32, dst_ul_x :i32, dst_ul_y :i32, source_constant_alpha :u8) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
         
@@ -154,7 +152,7 @@ pub fn send_bytes<T: PixelValues<T> + Copy>(vec :&Vec<T>, area_width :u32, area_
             area_width as i32,
             area_height as i32,
             bf
-          );
+          ).unwrap();
         
         //std::mem::forget(vec);
 
@@ -163,8 +161,8 @@ pub fn send_bytes<T: PixelValues<T> + Copy>(vec :&Vec<T>, area_width :u32, area_
         // An application should always replace a new object with the original,
         // default object after it has finished drawing with the new object.
         SelectObject(dc_src, hbmp_replace);
-        DeleteDC(dc_src);
-        DeleteObject(hbmp_from_bytes);
+        DeleteDC(dc_src).unwrap();
+        DeleteObject(hbmp_from_bytes).unwrap();
     }
 }
 
@@ -172,7 +170,7 @@ pub fn send_bytes<T: PixelValues<T> + Copy>(vec :&Vec<T>, area_width :u32, area_
 /// The bytes are sent row by row, the Alpha value in BlueGreenRedAlpha, that is used to define transparency,
 /// will be ignored, as it will be max by default (255), so every pixel will have full opacity
 /// The color chunks must be in BGRA, if Vec<u32> and the CPU has little endian then the color chunks must be in ARGB
-pub fn send_bytes_alpha_disabled<T>(vec :&Vec<T>, area_width :u32, area_height :u32, dst_ul_x :i32, dst_ul_y :i32) {
+pub fn send_bytes_alpha_disabled<T>(vec :&[T], area_width :u32, area_height :u32, dst_ul_x :i32, dst_ul_y :i32) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
         
@@ -233,8 +231,8 @@ pub fn send_bytes_alpha_disabled<T>(vec :&Vec<T>, area_width :u32, area_height :
         // An application should always replace a new object with the original,
         // default object after it has finished drawing with the new object.
         SelectObject(dc_src, hbmp_replace);
-        DeleteDC(dc_src);
-        DeleteObject(hbmp_from_bytes);
+        DeleteDC(dc_src).unwrap();
+        DeleteObject(hbmp_from_bytes).unwrap();
     }
 }
 
@@ -244,7 +242,7 @@ pub fn send_bytes_alpha_disabled<T>(vec :&Vec<T>, area_width :u32, area_height :
 /// e.g., every time a white (B=255, G=255, R=255, A=any_u8_value) is to be sent to a pixel it must be sent as completely transparent, invisible, hidden
 /// bgr_u32_to_hide must not contain A (e.g.: 0x00FF 8080, A must be zero for the hiding to work)
 /// The color chunks must be in BGRA, if Vec<u32> and the CPU has little endian then the color chunks must be in ARGB
-pub fn send_bytes_alpha_disabled_hide_specific_bgr<T>(vec :&Vec<T>, area_width :u32, area_height :u32, dst_ul_x :i32, dst_ul_y :i32, hide_b :u8, hide_g :u8, hide_r :u8) {
+pub fn send_bytes_alpha_disabled_hide_specific_bgr<T>(vec :&[T], area_width :u32, area_height :u32, dst_ul_x :i32, dst_ul_y :i32, hide_b :u8, hide_g :u8, hide_r :u8) {
     unsafe {
         //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
         
@@ -336,7 +334,7 @@ pub fn send_bytes_alpha_disabled_hide_specific_bgr<T>(vec :&Vec<T>, area_width :
             // so the matching is done on the BGR values alone
             // use fn bgra_to_abgr_u32(b,g,r,a) to get the u32 value out of u8 bgra values
             bgr_u32_to_hide.to_owned()
-          );
+          ).unwrap();
         //std::mem::forget(vec);
 
         ReleaseDC(None, screen);
@@ -344,7 +342,7 @@ pub fn send_bytes_alpha_disabled_hide_specific_bgr<T>(vec :&Vec<T>, area_width :
         // An application should always replace a new object with the original,
         // default object after it has finished drawing with the new object.
         SelectObject(dc_src, hbmp_replace);
-        DeleteDC(dc_src);
-        DeleteObject(hbmp_from_bytes);
+        DeleteDC(dc_src).unwrap();
+        DeleteObject(hbmp_from_bytes).unwrap();
     }
 }

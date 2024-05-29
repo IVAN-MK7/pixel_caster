@@ -1,8 +1,7 @@
 use pixel_caster::*;
 /// main() will just get and send some bytes to verify that the screen reacts to the new values
 fn main() {
-    println!("");
-    println!("Just playing with some pixels, to verify that the screen reacts to the new values (check the top-left corner)");
+    println!("\r\nJust playing with some pixels, to verify that the screen reacts to the new values (check the top-left corner)");
 
     let mut screen_area_to_capture_upperleftcorner_x = 60;
     let mut screen_area_to_capture_upperleftcorner_y = 60;
@@ -52,7 +51,7 @@ fn main() {
     let pixels_send_mode = PixelsSendMode::AlphaEnabled;
     // send the bytes to the pixels of the requested size of an absolute position on the screen
     Screen::update_area_custom(
-        &screen_u8.get_bytes(),
+        screen_u8.get_bytes(),
         screen_destination_area_upperleftcorner_x, 
         screen_destination_area_upperleftcorner_y,
         pixels_width,

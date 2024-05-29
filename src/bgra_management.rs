@@ -5,13 +5,13 @@ pub trait ColorAlteration<T :PixelValues<T>> {
     /// Set BGR to the provided values
     fn set_bgr(&mut self, b :u8, g :u8, r :u8);
     /// Sets the provided BGRA values to the bytes retrieved by the provided bytes addresses.
-    fn set_addresses_bgra(&mut self, bytes_addresses :&Vec<usize>, b :u8, g :u8, r :u8, a :u8);
+    fn set_addresses_bgra(&mut self, bytes_addresses :&[usize], b :u8, g :u8, r :u8, a :u8);
     /// Sets the provided optional BGRA values to the bytes retrieved by the provided bytes addresses.
     /// In case an optional value in not provided (is None) the value of the byte will not be overwritten, will be left as is.
     /// Same as set_addresses_bgra but permits to not override a specific BGRA color, e.g.: overwrite only BG and not RA.
-    fn set_addresses_optional_bgra(&mut self, bytes_addresses :&Vec<usize>, b :Option<u8>, g :Option<u8>, r :Option<u8>, a :Option<u8>);
+    fn set_addresses_optional_bgra(&mut self, bytes_addresses :&[usize], b :Option<u8>, g :Option<u8>, r :Option<u8>, a :Option<u8>);
     /// Sets the provided optional BGRA values to the bytes retrieved by the provided positions Vec<(x: usize, y: usize)>.
-    fn set_positions_bgra(&mut self, height :usize, vec_pos :&Vec<(usize, usize)>, b :u8, g :u8, r :u8, a :u8);
+    fn set_positions_bgra(&mut self, height :usize, vec_pos :&[(usize, usize)], b :u8, g :u8, r :u8, a :u8);
 
     /// When a BGR combination is met, it's Alpha will be set to a provided value
     fn match_bgr_set_alpha(&mut self, b :u8, g :u8, r :u8, a :u8);
@@ -43,7 +43,7 @@ impl ColorAlteration<u8> for Vec<u8> {
         }
     }
     
-    fn set_addresses_bgra(&mut self, bytes_addresses :&Vec<usize>, b :u8, g :u8, r :u8, a :u8) {
+    fn set_addresses_bgra(&mut self, bytes_addresses :&[usize], b :u8, g :u8, r :u8, a :u8) {
         for byte in bytes_addresses {
             self[*byte] = b;
             self[byte+1] = g;
@@ -52,7 +52,7 @@ impl ColorAlteration<u8> for Vec<u8> {
         }
     }
     
-    fn set_addresses_optional_bgra(&mut self, bytes_addresses :&Vec<usize>, b :Option<u8>, g :Option<u8>, r :Option<u8>, a :Option<u8>) {
+    fn set_addresses_optional_bgra(&mut self, bytes_addresses :&[usize], b :Option<u8>, g :Option<u8>, r :Option<u8>, a :Option<u8>) {
         for byte in bytes_addresses {
             if let Some(x) = b {
                 self[*byte] = x;
@@ -69,7 +69,7 @@ impl ColorAlteration<u8> for Vec<u8> {
         }
     }
     
-    fn set_positions_bgra(&mut self, height :usize, vec_pos :&Vec<(usize, usize)>, b :u8, g :u8, r :u8, a :u8) {
+    fn set_positions_bgra(&mut self, height :usize, vec_pos :&[(usize, usize)], b :u8, g :u8, r :u8, a :u8) {
         let stride = self.len() / height;
         for (x,y) in vec_pos {
             let pos = stride * y + 4 * x;
@@ -205,7 +205,7 @@ pub mod bytes_alterators {
 
 
 /// Returns lowest B,G,R and highest A found in colors where their A >= 1
-pub fn image_lowest_visible_bgr (vec :&Vec<u8>) -> BGRA<u8> {
+pub fn image_lowest_visible_bgr (vec :&[u8]) -> BGRA<u8> {
     
     let mut j = 0;
     // get Alpha Rred Green Blue values
@@ -228,11 +228,11 @@ pub fn image_lowest_visible_bgr (vec :&Vec<u8>) -> BGRA<u8> {
         }
         j += 4;
     }
-    return BGRA(lowest_blue, lowest_green, lowest_red, highest_alpha);
+    BGRA(lowest_blue, lowest_green, lowest_red, highest_alpha)
 }
 
 /// Returns B,G,R of the last found color with the heighest A
-pub fn image_opaquest_bgr(vec :&Vec<u8>) -> Vec<u8> {
+pub fn image_opaquest_bgr(vec :&[u8]) -> Vec<u8> {
     
     let mut j = 0;
     // get Alpha Red Green Blue values
@@ -249,15 +249,15 @@ pub fn image_opaquest_bgr(vec :&Vec<u8>) -> Vec<u8> {
         }
         j += 4;
     }
-    return vec![blue, green, red, highest_alpha];
+    vec![blue, green, red, highest_alpha]
 }
 
 
 /// Switches pixel's color's BGRA bytes positions.
 pub trait SwitchBytes<T : crate::PixelValues<T>, U : crate::PixelValues<U>> {
     fn switch_bytes(vec :&mut Vec<T>, v1 :usize, v2 :usize);
-    fn swap_blue_with_red(vec :&Vec<T>) -> Vec<T>;
-    fn u8_u32_casting(vec :&Vec<T>) -> Vec<U>;
+    fn swap_blue_with_red(vec :&[T]) -> Vec<T>;
+    fn u8_u32_casting(vec :&[T]) -> Vec<U>;
 }
 impl SwitchBytes<u8,u32> for u8 {
     /// Switches values of 2 provided indexes of every 4 8-bytes chunks ((u8 \[B,G,R,A\]) B: u8, G: u8, R:u8, A :u8 values chunks) in the vector, i1 and i2 must be between 0 and 3 (B:0, G:1, R:2, A:3).
@@ -267,19 +267,17 @@ impl SwitchBytes<u8,u32> for u8 {
         }
         let mut i = 0;
         for _ in 0..vec.len()/4 {
-            let t = vec[i+i1];
-            vec[i+i1] = vec[i+i2];
-            vec[i+i2] = t;
+            vec.swap(i+i1, i+i2);
             i +=4;
         }
     }
     /// Returns a cloned Vec<u8> with RGBA values sequence, if the provided Vec<u8> values were already in RGBA will be returned in BGRA
-    fn swap_blue_with_red(vec_bgra :&Vec<u8>) -> Vec<u8> {
-        let mut vec_rgba = vec_bgra.clone();
+    fn swap_blue_with_red(vec_bgra :&[u8]) -> Vec<u8> {
+        let mut vec_rgba = vec_bgra.to_vec();
         <u8>::switch_bytes(&mut vec_rgba,0,2);
-        return vec_rgba;
+        vec_rgba
     }
-    fn u8_u32_casting(vec :&Vec<u8>) -> Vec<u32> {
+    fn u8_u32_casting(vec :&[u8]) -> Vec<u32> {
         let mut vec_u32 = Vec::with_capacity(vec.len()/4);
         let mut i = 0;
         for _ in 0..vec.len()/4 {
@@ -290,7 +288,7 @@ impl SwitchBytes<u8,u32> for u8 {
         vec_u32
     }
 }
-impl SwitchBytes<u32,u8> for u32 {
+impl SwitchBytes<u32, u8> for u32 {
     /// Switches values of 2 provided indexes of every 4 8-bytes chunks (B: u8, G: u8, R: u8, A: u8 values chunks) in the vector, i1 and i2 must be between 0 and 3 (B:0, G:1, R:2, A:3).
     fn switch_bytes(vec :&mut Vec<u32>, i1 :usize, i2 :usize) {
         if i1 > 3 || i2 > 3 || i1 == i2 {
@@ -307,8 +305,8 @@ impl SwitchBytes<u32,u8> for u32 {
         if cfg!(target_endian = "big") {
             byte_to_switch_1_index = 24 - (i1 * 8);
             byte_to_switch_2_index = 24 - (i1 * 8);
-            byte_to_switch_1_full_val = 0xFF << 24 - (i1 * 8);
-            byte_to_switch_2_full_val = 0xFF << 24 - (i2 * 8);
+            byte_to_switch_1_full_val = 0xFF << (24 - (i1 * 8));
+            byte_to_switch_2_full_val = 0xFF << (24 - (i2 * 8));
         }
         
         // gets each of the 4 values index of the position from which the values start, starting from right
@@ -368,29 +366,27 @@ impl SwitchBytes<u32,u8> for u32 {
             v4_shift = byte_to_switch_1_index;
         }
 
-        let mut p : u32;
         let mut v1 : u32;
         let mut v2 : u32;
         let mut v3 : u32;
         let mut v4 : u32;
-        for i in 0..vec.len() {
-            p = vec[i];
+        for p in vec {
             // get Blue Green Red Alpha values by excluding the others
             // for each make null the bytes that are not those representing the value we need
-            v1 = (p & v1_full_val) >> v1_index; // get pixel bytes in the wanted order (probably, e.g.: BGRA, but doesn't matter if it's another)
-            v2 = (p & v2_full_val) >> v2_index;
-            v3 = (p & v3_full_val) >> v3_index;
-            v4 = (p & v4_full_val) >> v4_index;
-            vec[i] = (v1 << v1_shift) | (v2 << v2_shift) | (v3 << v3_shift) | (v4 << v4_shift);
+            v1 = (*p & v1_full_val) >> v1_index; // get pixel bytes in the wanted order (probably, e.g.: BGRA, but doesn't matter if it's another)
+            v2 = (*p & v2_full_val) >> v2_index;
+            v3 = (*p & v3_full_val) >> v3_index;
+            v4 = (*p & v4_full_val) >> v4_index;
+            *p = (v1 << v1_shift) | (v2 << v2_shift) | (v3 << v3_shift) | (v4 << v4_shift);
         }
     }
     /// Returns a cloned Vec<u8> with RGBA values sequence, if the provided Vec<u8> values were already in RGBA will be returned in BGRA
-    fn swap_blue_with_red(vec_bgra :&Vec<u32>) -> Vec<u32> {
-        let mut vec_rgba = vec_bgra.clone();
+    fn swap_blue_with_red(vec_bgra :&[u32]) -> Vec<u32> {
+        let mut vec_rgba = vec_bgra.to_vec();
         <u32>::switch_bytes(&mut vec_rgba,0,2);
-        return vec_rgba;
+        vec_rgba
     }
-    fn u8_u32_casting(vec :&Vec<u32>) -> Vec<u8> {
+    fn u8_u32_casting(vec :&[u32]) -> Vec<u8> {
         let mut vec_u32 = Vec::with_capacity(vec.len()*4);
         for val in vec {
             vec_u32.extend(val.to_ne_bytes());
@@ -428,7 +424,7 @@ pub fn u32_bytes_oredered_indexes_and_fullvalues() -> ([usize;4],[u32;4]) {
         v3_full_val = 0x0000_FF00;
         v4_full_val = 0x0000_00FF;
     }
-    return ([v1_index,v2_index,v3_index,v4_index], [v1_full_val,v2_full_val,v3_full_val,v4_full_val])
+    ([v1_index,v2_index,v3_index,v4_index], [v1_full_val,v2_full_val,v3_full_val,v4_full_val])
 }
 
 

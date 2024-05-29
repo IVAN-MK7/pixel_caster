@@ -111,9 +111,9 @@ mod tests {
         let original_range_x = range_x;
 
         if DISPLAY_RESULTS {
-            let mut buffer_alpha_not_zero = buffer.clone();
+            let buffer_alpha_not_zero = buffer.clone();
             //crate::bgra_management::u8_bgra_pos_not_zero_set_pos(&mut buffer_alpha_not_zero, 3, 255,0,0,255);
-            crate::Screen::update_area_custom(&mut buffer_alpha_not_zero, 0, 0, original_range_x as u32, range_y as u32, PixelsSendMode::AlphaEnabled);
+            crate::Screen::update_area_custom(&buffer_alpha_not_zero, 0, 0, original_range_x as u32, range_y as u32, PixelsSendMode::AlphaEnabled);
             //export Vec<u8> bytes into .png with image formatting
             image::save_buffer_with_format(format!("{}{}", "fonts/exports/", "testing_result_export.png"), &<u8>::swap_blue_with_red(&buffer_alpha_not_zero), range_x as u32, range_y as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
 
@@ -128,7 +128,7 @@ mod tests {
             let values = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
             
             // +1 because start and end values are included in the area, therefore if an area's first pixel is at 0 and it's last at 9 its range is 10, range is 9-0+1. Another e.g.: x starts at 10, ends at 40 : area = 31; 40 - 10 + 1
-            let (mut pixels_captured, char_values) = pixel_grabber(&buffer, height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+            let (pixels_captured, char_values) = pixel_grabber(&buffer, height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
             
             
             if DISPLAY_RESULTS {
@@ -144,7 +144,7 @@ mod tests {
         
                 // greys (B == G == R) too close to white (255) greater than a threshold will be set transparent (Alpha = 0), the others will be set to 0 (black), unless whites (where B || G || R == 255)
                 // u8_grey_scale_into_black(&mut pixels_captured, 149);
-                crate::Screen::update_area_custom(&mut pixels_captured, 0, ((range_y + 10)*2) as i32, (values.right_x - values.left_x) as u32 +1, (values.bottom_y - img_visible_range.top_y) as u32 +1, PixelsSendMode::AlphaEnabled);
+                crate::Screen::update_area_custom(&pixels_captured, 0, ((range_y + 10)*2) as i32, (values.right_x - values.left_x) as u32 +1, (values.bottom_y - img_visible_range.top_y) as u32 +1, PixelsSendMode::AlphaEnabled);
                 
                 let mut pixels_captured_clone = pixels_captured.clone();
                 let vec_pos_char_relative = vec![
@@ -156,7 +156,7 @@ mod tests {
                 pixels_captured_clone.set_positions_bgra((values.bottom_y - img_visible_range.top_y)+1, &vec_pos_char_relative, 170, 255, 170, 255);
                 let vec_addresses_char_relative = vec![char_values.top_y_index, char_values.left_x_index, char_values.right_x_index, char_values.bottom_y_index];
                 pixels_captured_clone.set_addresses_bgra(&vec_addresses_char_relative, 0, 0, 255, 255);
-                crate::Screen::update_area_custom(&mut pixels_captured_clone, 0, ((range_y + 10)*3) as i32,(values.right_x - values.left_x) as u32 +1, (values.bottom_y - img_visible_range.top_y) as u32 +1, PixelsSendMode::AlphaEnabled);
+                crate::Screen::update_area_custom(&pixels_captured_clone, 0, ((range_y + 10)*3) as i32,(values.right_x - values.left_x) as u32 +1, (values.bottom_y - img_visible_range.top_y) as u32 +1, PixelsSendMode::AlphaEnabled);
                 
             }
 
@@ -188,7 +188,7 @@ mod tests {
             char_u8_vec.chars.len(), chars_string.chars().count()
         );
 
-        char_u8_vec.chars.push(PixelsChar {char: ' ', char_name: String::from("space"), pixels: PixelsCollection::<u8>::create(space_char_width, char_u8_vec.chars[0].pixels.height, vec![0; space_char_width as usize * char_u8_vec.chars[0].pixels.height as usize * 4]).unwrap() });
+        char_u8_vec.chars.push(PixelsChar {char: ' ', char_name: String::from("space"), pixels: PixelsCollection::<u8>::create(space_char_width, char_u8_vec.chars[0].pixels.height, vec![0; space_char_width * char_u8_vec.chars[0].pixels.height * 4]).unwrap() });
         
         // crate::send_bytes(&char_u8_vec.chars[0].bgra_bytes, &(char_u8_vec.chars[0].width as i32), &(char_u8_vec.chars[0].height as i32), &10, &10, 255);
 
@@ -235,7 +235,7 @@ mod tests {
             let values = get_cardinal_points_until_nonestreak_x(&buffer, height, start_x, start_y, range_x, range_y, min_px_space_btwn_chars, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
             
             // +1 because start and end values are included in the area, therefore if an area's first pixel is at 0 and it's last at 9 its range is 10, range is 9-0+1. Another e.g.: x starts at 10, ends at 40 : area = 31; 40 - 10 + 1
-            let (mut pixels_captured, char_values) = pixel_grabber(&buffer, height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
+            let (_, char_values) = pixel_grabber(&buffer, height, values.left_x, img_visible_range.top_y, values.right_x - values.left_x+1, values.bottom_y - img_visible_range.top_y+1, |_:u8,_:u8,_:u8,a:u8| -> bool { a > 0});
             
             if DISPLAY_RESULTS {
                 let vec_pos_char = vec![(values.left_x, img_visible_range.top_y), (values.left_x, img_visible_range.bottom_y), (values.right_x, img_visible_range.top_y), (values.right_x, img_visible_range.bottom_y)];
@@ -286,7 +286,7 @@ mod tests {
             range_x = original_range_x - start_x;
         }
 
-        image::save_buffer_with_format("fonts/exports/with_poles.png", &<u8>::swap_blue_with_red(&mut bytes_chars_poles), image_transparent_bkgrnd.width as u32, image_transparent_bkgrnd.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
+        image::save_buffer_with_format("fonts/exports/with_poles.png", &<u8>::swap_blue_with_red(&bytes_chars_poles), image_transparent_bkgrnd.width as u32, image_transparent_bkgrnd.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
 
     }
 
@@ -374,7 +374,7 @@ impl std::fmt::Debug for CardinalPoints {
 }
 
 /// returns the cardinal points of given range of which pixels match a condition
-pub fn get_cardinal_points_until_nonestreak_x(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, none_streak_x :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> CardinalPoints {
+pub fn get_cardinal_points_until_nonestreak_x(buffer :&[u8], height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, none_streak_x :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> CardinalPoints {
     
     // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
     let stride = buffer.len() / height;
@@ -416,13 +416,13 @@ pub fn get_cardinal_points_until_nonestreak_x(buffer :&Vec<u8>, height :usize, s
             break;
         }
     }
-    return values;
+    values
 }
 
 
 /// From a starting pixel scans an area of the given range and populates a new Vec<u8> with the given range with pixels that pass the bgra_matcher.
 /// Returns the Vec<u8> and the cardinal points of the most outer pixels that passed the bgra_matcher
-pub fn pixel_grabber(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> (Vec<u8>, CardinalPoints) {
+pub fn pixel_grabber(buffer :&[u8], height :usize, start_x :usize, start_y :usize, range_x :usize, range_y :usize, bgra_matcher :fn(u8,u8,u8,u8) -> bool) -> (Vec<u8>, CardinalPoints) {
     
     // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
     let stride = buffer.len() / height;
@@ -440,9 +440,8 @@ pub fn pixel_grabber(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :u
         bottom_y_index : 0
     };
     let mut rx = 0;
-    let mut ry = 0;
     let rstride = (range_x * range_y * 4) / range_y;
-    for y in start_y..start_y+range_y {
+    for (ry, y) in (start_y..start_y+range_y).enumerate() {
         for x in start_x..start_x+range_x {
             let i = stride * y + 4 * x;
             let j = rstride * ry + 4 * rx;
@@ -473,10 +472,8 @@ pub fn pixel_grabber(buffer :&Vec<u8>, height :usize, start_x :usize, start_y :u
             rx += 1;
         }
         rx = 0;
-        ry += 1;
     }
-    return (pixels_captured, values);
-    //return  values;
+    (pixels_captured, values)
 }
 
 /// Additional implementations that enables .png importing and CharsCollection creation
@@ -540,12 +537,12 @@ pub fn png_into_pixels_collection (png_path :&str) -> Result<PixelsCollection<u8
     
     match image::open(png_path) {
         Ok(img) => {
-            return Ok( PixelsCollection::<u8>::create(img.width() as usize, img.height() as usize, img.into_rgba8().to_vec())? );
+            Ok(PixelsCollection::<u8>::create(img.width() as usize, img.height() as usize, img.into_rgba8().to_vec())?)
         },
         Err(err) => {
-            return Err(err.to_string());
+            Err(err.to_string())
         }
-    };
+    }
     /*match std::fs::read(png_path) {
         Ok(bytes) => {
             match image::load_from_memory_with_format(&bytes, image::ImageFormat::Png) {
@@ -611,7 +608,7 @@ impl PixelsChar<u8> {
 pub struct BGRA<T: Copy + Clone> (pub T, pub T, pub T, pub T);
 impl<T: Copy + Clone> BGRA<T> {
     pub fn to_vec(&self) -> Vec<T> {
-        return vec![self.0,self.1,self.2,self.3]
+        vec![self.0, self.1, self.2, self.3]
     }
 }
 
@@ -649,22 +646,22 @@ impl CharsCollection<u8> {
                         pixels_char.switch_bytes(0,2);
                         char_u8_vec.chars.push(pixels_char);
                     },
-                    Err(_) => ()
+                    Err(e) => println!("{}", e),
                 }
             }
         }
-        return Ok(char_u8_vec);
+        Ok(char_u8_vec)
     }
     /// Exports the collection's chars' Vec<u8> color bytes into the given folder path in .png file format (BGRA will become RGBA)
     pub fn export_as_pngs (&self, folder_path: &str) -> std::io::Result<()> {
-        Self::export(&format!("{}", folder_path),&self)
+        Self::export(folder_path,self)
     }
     /// Exports all the Chars into the CharsCollection's path except those whose char value is the one provided
     /// (e.g.: set to '█' in order to not to export the chars which char_name was not present in CHARS at the moment of importing it froma folder of .png chars)
     pub fn export_as_pngs_overwrite_except_char (&mut self, folder_path: &str, c_to_exclude :char) -> std::io::Result<()> {
-        let mut cc_except = CharsCollection {chars : self.chars.clone(), path : self.path.to_string(), bgra : self.bgra.clone()};
+        let mut cc_except = CharsCollection {chars : self.chars.clone(), path : self.path.to_string(), bgra : self.bgra};
         cc_except.chars.retain(|x| x.char != c_to_exclude);
-        Self::export(&format!("{}{}", folder_path.trim_end_matches("\\"), "\\mapped_in_CHARS\\"),&cc_except)
+        Self::export(&format!("{}{}", folder_path.trim_end_matches('\\'), "\\mapped_in_CHARS\\"),&cc_except)
     }
     /// Exports the provided collection's chars' Vec<u8> color bytes into the given folder path in .png file format (BGRA will become RGBA), creates the path if the provided one does not exist
     fn export (png_path :&str, coll :&CharsCollection<u8>) -> std::io::Result<()> {
@@ -675,7 +672,7 @@ impl CharsCollection<u8> {
             }
         };
         for c in &coll.chars {
-            image::save_buffer_with_format(format!("{}{}.png", png_path.trim_end_matches("\\").to_owned() + "\\", c.char_name), &<u8>::swap_blue_with_red(&c.pixels.bytes), c.pixels.width as u32, c.pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
+            image::save_buffer_with_format(format!("{}{}.png", png_path.trim_end_matches('\\').to_owned() + "\\", c.char_name), &<u8>::swap_blue_with_red(&c.pixels.bytes), c.pixels.width as u32, c.pixels.height as u32, image::ColorType::Rgba8, image::ImageFormat::Png).unwrap();
         }
         Ok(())
     }
@@ -747,7 +744,7 @@ impl CharsCollection<u8> {
                         }
                         // add the char's current row's bytes to the resulting pixels string
                         else {
-                            let i = (char_vec.len()/char.pixels.height as usize) * string_y as usize + (w * 4) as usize;
+                            let i = (char_vec.len()/char.pixels.height) * string_y + (w * 4) as usize;
                             vec.extend_from_slice(&[char_vec[i], char_vec[i+1], char_vec[i+2], char_vec[i+3]])
                         }
                     }
@@ -772,7 +769,7 @@ impl CharsCollection<u8> {
             }
             // when the last character's current row bytes end, go back to the first character and start with the next row
         }
-        return PixelsString { bgra : self.bgra.clone(), pixels : PixelsCollection::<u8>::create(vec_width as usize, tallest_char_height as usize, vec).unwrap()}
+        PixelsString { bgra : self.bgra, pixels : PixelsCollection::<u8>::create(vec_width, tallest_char_height, vec).unwrap()}
     }
 }
 
@@ -816,7 +813,7 @@ impl CharsHashmap for std::collections::HashMap<String, char> {
     }
     /// Returns Some(the first Key that has the provided Value), otherwise None
     fn get_char_name_by_char (&self, char :char) -> Option<String> {
-        find_key_for_value(&self, char)
+        find_key_for_value(self, char)
     }
 }
 

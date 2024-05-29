@@ -21,7 +21,7 @@ fn main (){
     let mut screen_u32 = Screen::<u32>::new(80, 2, 4, 1);
     screen_u32.scan_area();
     let vec_u32_first_value = screen_u32.get_bytes()[0];
-    let bgra = <u32>::u8_u32_casting(&vec![vec_u32_first_value]);
+    let bgra = <u32>::u8_u32_casting(&[vec_u32_first_value]);
     println!("screen_u32.bytes: first value: {}, length: {}", vec_u32_first_value, screen_u32.get_bytes().len());
     println!("screen_u32.bytes: first pixel's values: B:{} G:{} R:{} A:{}", bgra[0], bgra[1], bgra[2], bgra[3]);
 

@@ -16,8 +16,7 @@ fn main() {
         screen_destination_area_upperleftcorner_y
     );
 
-    println!("");
-    println!("A pixel area of the size of a rectangle with width : {}px and height : {}px, will now be copied from the following screen location :", pixels_width, pixels_height);
+    println!("\r\nA pixel area of the size of a rectangle with width : {}px and height : {}px, will now be copied from the following screen location :", pixels_width, pixels_height);
     println!("X : {}, Y : {}", screen_area_to_capture_upperleftcorner_x, screen_area_to_capture_upperleftcorner_y);
     println!("and pasted to : X : {}, Y : {}", screen_destination_area_upperleftcorner_x, screen_destination_area_upperleftcorner_y);
 }

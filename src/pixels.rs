@@ -9,7 +9,7 @@ pub trait PixelValues<T> {
     /// this will make so that each pixel's transparency is adjusted to the value the Windows API needs to display it with the wanted transparency.
     /// The Windows API use premultiplied alpha, which means that the Red, Green and Blue channel values must be premultiplied with the Alpha channel value.
     /// For example, if the alpha channel value is x, the Red, Green and Blue channels must be multiplied by x and divided by 0xff (255) prior to the call.
-    fn create_adjusted_vec(vec :&Vec<T>) -> Vec<T>;
+    fn create_adjusted_vec(vec :&[T]) -> Vec<T>;
 
     /// Creates a Vec of the given type and sets its capacity and length needed to contain the pixels' color values of the of the given area (u8 : area_width * area_height * 4, u32 : area_width * area_height)
     fn initialize_vec(area_width: usize, area_height: usize) -> Vec<T>;
@@ -21,7 +21,7 @@ pub trait PixelValues<T> {
     fn get_units_per_pixel(&self) -> u8;
 }
 impl PixelValues<u8> for u8 {
-    fn create_adjusted_vec(vec :&Vec<u8>) -> Vec<u8> {
+    fn create_adjusted_vec(vec :&[u8]) -> Vec<u8> {
         let mut vec_adjusted :Vec<u8> = Vec::with_capacity(vec.len());
     
         let mut i = 0;
@@ -63,7 +63,7 @@ impl PixelValues<u8> for u8 {
     fn get_units_per_pixel(&self) -> u8 { 4 }
 }
 impl PixelValues<u32> for u32 {
-    fn create_adjusted_vec(vec :&Vec<u32>) -> Vec<u32> {
+    fn create_adjusted_vec(vec :&[u32]) -> Vec<u32> {
         let mut vec_adjusted :Vec<u32> = Vec::with_capacity(vec.len());
         
         let (ordered_indexes, fullvalues)= u32_bytes_oredered_indexes_and_fullvalues();
@@ -76,17 +76,17 @@ impl PixelValues<u32> for u32 {
         let v3_full_val = fullvalues[2];
         let v4_full_val = fullvalues[3];
     
-        for i in 0..vec.len() {
+        for p in vec {
     
             // get Blue Green Red Alpha values by excluding the others
             // for each make null the bytes that are not those representing the value we need
             // e.g., Alpha value : is the 4th in BGRA (in a CPU with little endianness is represented by the 2 most left bytes), so with "0xFF00_0000" we keep them,
             // shift them enough position to have them at the most right so that they will be represented in a 0-255 range of values,
             // and assign to the variable "alpha"
-            let blue :u32 = (vec[i] & v1_full_val) >> v1_index;
-            let green :u32 = (vec[i] & v2_full_val) >> v2_index;
-            let red :u32 = (vec[i] & v3_full_val) >> v3_index;
-            let alpha :u32 = (vec[i] & v4_full_val) >> v4_index;
+            let blue :u32 = (p & v1_full_val) >> v1_index;
+            let green :u32 = (p & v2_full_val) >> v2_index;
+            let red :u32 = (p & v3_full_val) >> v3_index;
+            let alpha :u32 = (p & v4_full_val) >> v4_index;
             let diff :u32 = 255 - alpha;
             let mut red_adjusted :u32 = red;
             let mut green_adjusted :u32 = green;
@@ -147,7 +147,7 @@ impl<T: PixelValues<T>> PixelsCollection<T> {
         Ok(PixelsCollection {
             width,
             height,
-            row_length: ((width * height * <T>::units_per_pixel() as usize) / height) as usize,
+            row_length: ((width * height * <T>::units_per_pixel() as usize) / height),
             bytes,
             units_per_pixel: <T>::units_per_pixel()
         })
@@ -181,7 +181,7 @@ impl PixelsCollection<u8> {
 
     /// If a BGR combination of any grey (equal B,G,R make shades of grey) is met and their value exceed the given threshold, 
     /// it's Alpha will be set to a provided value. Every grey will be set to black
-    pub fn grey_scale_into_black(vec : &mut Vec<u8>, grey_threshold :u8) {
+    pub fn grey_scale_into_black(vec : &mut [u8], grey_threshold :u8) {
         let mut i = 0;
         for _ in 0..(vec.len()/4) {
             // sets greys (equal B,G,R make shades of grey) opacity to a given Alpha when they come too close to white (B,G,R : 255)
@@ -207,7 +207,7 @@ impl PixelsCollection<u8> {
         }
     }
     /// Whites become transparent, range from white to lowest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
-    pub fn white_background_to_transparency_gradient(vec :&Vec<u8>) -> Vec<u8> {
+    pub fn white_background_to_transparency_gradient(vec :&[u8]) -> Vec<u8> {
         let mut vec_adjusted :Vec<u8> = Vec::with_capacity(vec.len());
     
         let mut j = 0;
@@ -257,7 +257,7 @@ impl PixelsCollection<u8> {
     
                     // get the byte we need as adjusting base (this color's byte which in the whole image reached the lowest value (B or G or R))
                     let this_val = vec[i + lowest_val_index];
-                    let alpha_adjusted = (255 - this_val + lowest_val) as u8;
+                    let alpha_adjusted = 255 - this_val + lowest_val;
                     vec_adjusted.extend_from_slice(&[blue, green, red, alpha_adjusted]);
                 }
                 // pixel is white, so make it transparent. add lowest BGR values to keep the bytes all with the same BGR values, and only change the Alpha
@@ -272,10 +272,10 @@ impl PixelsCollection<u8> {
     
             i += 4;
         }
-        return vec_adjusted;
+        vec_adjusted
     }
     /// Blacks become transparent, range from black to highest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
-    pub fn black_background_to_transparency_gradient(vec :&Vec<u8>) -> Vec<u8> {
+    pub fn black_background_to_transparency_gradient(vec :&[u8]) -> Vec<u8> {
         let mut vec_adjusted :Vec<u8> = Vec::with_capacity(vec.len());
     
         let mut j = 0;
@@ -325,7 +325,7 @@ impl PixelsCollection<u8> {
     
                     // get the byte we need as adjusting base (this color's byte which in the whole image reached the highest value (B or G or R))
                     let this_val = vec[i + highest_val_index];
-                    let alpha_adjusted = (highest_val - (highest_val - this_val)) as u8;
+                    let alpha_adjusted = highest_val - (highest_val - this_val);
                     vec_adjusted.extend_from_slice(&[blue, green, red, alpha_adjusted]);
                 }
                 // pixel is black, so make it transparent. add highest BGR values to keep the bytes all with the same BGR values, and only change the Alpha
@@ -340,7 +340,7 @@ impl PixelsCollection<u8> {
     
             i += 4;
         }
-        return vec_adjusted;
+        vec_adjusted
     }
 
     /// Returns a new PixelsCollection from the provided one, scaling based on the provided ResizeSize (either width or hight)
@@ -374,7 +374,7 @@ impl PixelsCollection<u8> {
             }
         }
 
-        return PixelsCollection::create(new_width, new_height, bytes_resized).unwrap();
+        PixelsCollection::create(new_width, new_height, bytes_resized).unwrap()
     }
 }
 

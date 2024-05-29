@@ -73,7 +73,7 @@ fn main() {
     println!("{}", now.elapsed().as_millis());*/
     
     create_color_matcher_or_alterator!(full_opacity (_:u8,_:u8,_:u8,a:u8) bool, (a >= 255));
-    let bgra_vec = vec![30_u8,120,120,255];
+    let bgra_vec = [30_u8,120,120,255];
     assert!(full_opacity!(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3]));
     assert!(full_opacity(bgra_vec[0], bgra_vec[1], bgra_vec[2], bgra_vec[3]));
 
@@ -84,12 +84,12 @@ fn main() {
     assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
 
     create_color_matcher_or_alterator!(max_blue_full_opacity (a:u8,b:u8,_:u8,_:u8) bool, (b == 255, a == 255));
-    let abgr_vec = vec![255,255,0,0];
+    let abgr_vec = [255,255,0,0];
     assert!(max_blue_full_opacity!(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3]));
     assert!(max_blue_full_opacity(abgr_vec[0], abgr_vec[1], abgr_vec[2], abgr_vec[3]));
     
     create_color_matcher_or_alterator!(slice_full_opacity (slice, &[u8]), (b,g,r,a) bool, (a >= 255));
-    let bgra_vec = vec![30_u8,120,120,255];
+    let bgra_vec = [30_u8,120,120,255];
     let bgra_vec_slice = &bgra_vec[0..=3];
     assert!(slice_full_opacity!(bgra_vec_slice));
     assert!(slice_full_opacity(bgra_vec_slice));
@@ -101,7 +101,7 @@ fn main() {
     assert_eq!(bgra_3vec, vec![255,255,255,255, 255,255,255,255, 255,255,255,255]);
 
     create_color_matcher_or_alterator!(slice_max_blue_full_opacity (slice, &[u8]), (a,b,g,r) bool, (b == 255, a == 255));
-    let abgr_vec = vec![255_u8,255,0,0];
+    let abgr_vec = [255_u8,255,0,0];
     let abgr_vec_slice = &abgr_vec[0..=3];
     assert!(slice_max_blue_full_opacity!(abgr_vec_slice));
     assert!(slice_max_blue_full_opacity(abgr_vec_slice));
@@ -147,7 +147,7 @@ fn main() {
     
     
     create_color_matcher_or_alterator!(slice_max_blue_max_alphaxxx (slice, &[u8]), (b,g,r,a) bool, (a == 255, b == 33));
-    let mut tmp = vec![33,120,120,255, 40,13,44,22];
+    let mut tmp = [33,120,120,255, 40,13,44,22];
     let res = slice_max_blue_max_alphaxxx!(tmp[0..=3]);
     println!("{}", res);
     create_color_matcher_or_alterator!(slice_max_blue_max_alphayyy (slice, &mut [u8]), (b,g,r,a) (), (a = 100, b = 22));
@@ -155,7 +155,7 @@ fn main() {
 
 
     create_color_matcher_or_alterator!(not_fully_opaquexxxx (b:u8,g:u8,r:u8,a:u8) bool, (a < 255));
-    let mut tmpxxxx = vec![33,120,120,233, 40,13,44,22];
+    let mut tmpxxxx = [33,120,120,233, 40,13,44,22];
     println!("{}", not_fully_opaquexxxx(0,0,0,tmpxxxx[3]));
     create_color_matcher_or_alterator!(max_blue_max_alphayyyy (b:&mut u8,g:&mut u8,r:&mut u8,a:&mut u8) (), (b = 200_u8, a = 255_u8));
     let mut bb = 10_u8;
@@ -164,14 +164,14 @@ fn main() {
     max_blue_max_alphayyyy!(bb,0,0,aa);
     println!("bb{} aa{}", bb, aa);
     create_color_matcher_or_alterator!(nobbb (b:u8,g:u8,r:u8,a:u8) bool, (a < 255));
-    let mut tmpxxxx = vec![33_u8,120,120,233, 40,13,44,22];
+    let mut tmpxxxx = [33_u8,120,120,233, 40,13,44,22];
     println!("fn {}", nobbb(0,0,0,tmpxxxx[3]));
     println!("macro {}", nobbb!(0,0,0,tmpxxxx[3]));
     create_color_matcher_or_alterator!(noxxx (b:&mut u8,g:&mut u8,r:&mut u8,a:&mut u8) (), (b = 255_u8, a = 255_u8));
 
     
     create_color_matcher_or_alterator!(tsts (b:u8,g:u8,_:u8,a:u8) bool, (a < 255));
-    let mut tmpxxxx = vec![33,120,120,233, 40,13,44,22];
+    let mut tmpxxxx = [33,120,120,233, 40,13,44,22];
     println!("{}", tsts(0,0,0,tmpxxxx[3]));
     println!("{}", tsts!(0,0,0,tmpxxxx[3]));
     print_item_resolve_later_demonstration!(test_x (b,g,_,a), (a < 33, g > 4));

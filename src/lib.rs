@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 // https://github.com/microsoft/windows-rs
 extern crate windows;
 extern crate libc;
@@ -133,20 +135,23 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// Updates its PixelsCollection's bytes with the BGRA bytes of the Screen's set pixels area
     pub fn scan_area(&mut self) {
         Self::get_bytes_from_screen(self.pixels.bytes.as_mut_ptr() as *mut c_void,
-            self.screen_area.upperleftcorner_x as i32, self.screen_area.upperleftcorner_y as i32,
-            self.screen_area.width as u32, self.screen_area.height as u32,
+            self.screen_area.upperleftcorner_x, self.screen_area.upperleftcorner_y,
+            self.screen_area.width, self.screen_area.height,
             &self.win_api_screen
         )
     }
-    /// Updates self.pixels.bytes, make sure that the field not being read by other threads while this function is running.
+    /// Updates self.pixels.bytes.
+    /// # Safety
+    ///
+    /// Make sure that the `pixels.bytes` won't be accessed by other threads during the whole duration of this function.
     pub unsafe fn scan_area_interior_mutability(&self) {
         unsafe {
             let const_ptr = self as *const Self;
             let mut_ptr = const_ptr as *mut Self;
             Self::get_bytes_from_screen(
                 (*mut_ptr).pixels.bytes.as_mut_ptr() as *mut c_void,
-                self.screen_area.upperleftcorner_x as i32, self.screen_area.upperleftcorner_y as i32,
-                self.screen_area.width as u32, self.screen_area.height as u32,
+                self.screen_area.upperleftcorner_x, self.screen_area.upperleftcorner_y,
+                self.screen_area.width, self.screen_area.height,
                 &self.win_api_screen
             )
         }
@@ -178,7 +183,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
         if vec.len() != (self.screen_area.width * self.screen_area.height * <T>::units_per_pixel() as u32) as usize {
             return Err("Provided Vec has not the correct length".to_string());
         }
-        return Ok(Self::get_bytes_from_screen(vec.as_mut_ptr() as *mut c_void, self.screen_area.upperleftcorner_x, self.screen_area.upperleftcorner_y, self.screen_area.width, self.screen_area.height, &self.win_api_screen));
+        Self::get_bytes_from_screen(vec.as_mut_ptr() as *mut c_void, self.screen_area.upperleftcorner_x, self.screen_area.upperleftcorner_y, self.screen_area.width, self.screen_area.height, &self.win_api_screen);
+        Ok(())
     }
     
     /// Puts the BGRA bytes of a given area of the screen into the provided Vec, which must already have the necessary length to host the values
@@ -211,29 +217,30 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
         if vec.len() != (area_width * area_height * <T>::units_per_pixel() as u32) as usize {
             return Err("Provided Vec has not the correct length".to_string());
         }
-        return Ok(Self::get_bytes_from_screen(vec.as_mut_ptr() as *mut c_void, src_ul_x, src_ul_y, area_width, area_height, &Self::gen_win_api_screen(area_width, area_height, false)));
+        Self::get_bytes_from_screen(vec.as_mut_ptr() as *mut c_void, src_ul_x, src_ul_y, area_width, area_height, &Self::gen_win_api_screen(area_width, area_height, false));
+        Ok(())
     }
     
     /// Sends its PixelsCollection's bytes to the Screen's set pixels area
     pub fn update_area(&mut self) {
         Self::pixels_send_mode_matcher(
             &self.pixels.bytes,
-            self.screen_area.upperleftcorner_x as i32, self.screen_area.upperleftcorner_y as i32,
-            self.screen_area.width as u32, self.screen_area.height as u32, &self.win_api_screen, self.pixels_send_mode
+            self.screen_area.upperleftcorner_x, self.screen_area.upperleftcorner_y,
+            self.screen_area.width, self.screen_area.height, &self.win_api_screen, self.pixels_send_mode
         )
     }
     
     /// Sends the provided Vec's values to the Screen's set pixels area
-    pub fn update_area_from_vec(&mut self, vec: &Vec<T>) {
+    pub fn update_area_from_vec(&mut self, vec: &[T]) {
         Self::pixels_send_mode_matcher(
             vec,
-            self.screen_area.upperleftcorner_x as i32, self.screen_area.upperleftcorner_y as i32,
-            self.screen_area.width as u32, self.screen_area.height as u32, &self.win_api_screen, self.pixels_send_mode
+            self.screen_area.upperleftcorner_x, self.screen_area.upperleftcorner_y,
+            self.screen_area.width, self.screen_area.height, &self.win_api_screen, self.pixels_send_mode
         )
     }
 
     /// Sends a provided Vec's values to the provided screen area with the given PixelsSendMode, without creating a Screen instance
-    pub fn update_area_custom(vec: &Vec<T>, screen_area_upperleftcorner_x: i32, screen_area_upperleftcorner_y: i32, area_width: u32, area_height: u32, pixels_send_mode: PixelsSendMode) {
+    pub fn update_area_custom(vec: &[T], screen_area_upperleftcorner_x: i32, screen_area_upperleftcorner_y: i32, area_width: u32, area_height: u32, pixels_send_mode: PixelsSendMode) {
         Self::pixels_send_mode_matcher(
             vec,
             screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
@@ -241,7 +248,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
         )
     }
     
-    fn pixels_send_mode_matcher(vec: &Vec<T>, screen_area_upperleftcorner_x: i32, screen_area_upperleftcorner_y: i32, area_width: u32, area_height: u32, win_api_screen: &WindowsApiScreen, pixels_send_mode: PixelsSendMode) {
+    fn pixels_send_mode_matcher(vec: &[T], screen_area_upperleftcorner_x: i32, screen_area_upperleftcorner_y: i32, area_width: u32, area_height: u32, win_api_screen: &WindowsApiScreen, pixels_send_mode: PixelsSendMode) {
         match pixels_send_mode {
             PixelsSendMode::AlphaEnabled => Self::send_bytes_to_screen(vec,
                 screen_area_upperleftcorner_x, screen_area_upperleftcorner_y,
@@ -277,7 +284,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// source_constant_alpha sets the Alpha value of every BGRA (so it sets the whole image's opacity , range : 0-255)
     /// set source_constant_alpha to 255 in order to use per-pixel alpha values
     /// The color chunks must be in BGRA, if Vec<u32> and the CPU has little endian then the color chunks must be in ARGB
-    fn send_bytes_to_screen(vec :&Vec<T>, dst_ul_x :i32, dst_ul_y :i32, area_width :u32, area_height :u32, source_constant_alpha :u8, win_api_screen: &WindowsApiScreen) {
+    fn send_bytes_to_screen(vec :&[T], dst_ul_x :i32, dst_ul_y :i32, area_width :u32, area_height :u32, source_constant_alpha :u8, win_api_screen: &WindowsApiScreen) {
         unsafe {
             //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
             
@@ -335,7 +342,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 area_width as i32,
                 area_height as i32,
                 bf
-            );
+            ).unwrap();
     
             // If the win_api_screen were made for a single run delete them. Must delete the created elements, otherwise after many calls the api will stop working for the whole duration of this .exe process
             if !win_api_screen.is_static {
@@ -344,9 +351,9 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // An application should always replace a new object with the original,
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
-                DeleteDC(win_api_screen.dc_screen);
-                DeleteObject(win_api_screen.captured_hbmp);
-                DeleteObject(hbmp_from_bytes);
+                DeleteDC(win_api_screen.dc_screen).unwrap();
+                DeleteObject(win_api_screen.captured_hbmp).unwrap();
+                DeleteObject(hbmp_from_bytes).unwrap();
             }
         }
     }
@@ -355,7 +362,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// The bytes are sent row by row, the Alpha value in BlueGreenRedAlpha, that is used to define transparency,
     /// will be ignored, as it will be max by default (255), so every pixel will have full opacity
     /// The color chunks must be in BGRA, if Vec<u32> and the CPU has little endian then the color chunks must be in ARGB
-    fn send_bytes_to_screen_alpha_disabled(vec :&Vec<T>, dst_ul_x :i32, dst_ul_y :i32, area_width :u32, area_height :u32, win_api_screen: &WindowsApiScreen) {
+    fn send_bytes_to_screen_alpha_disabled(vec :&[T], dst_ul_x :i32, dst_ul_y :i32, area_width :u32, area_height :u32, win_api_screen: &WindowsApiScreen) {
         unsafe {
             //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
             
@@ -422,9 +429,9 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // An application should always replace a new object with the original,
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
-                DeleteDC(win_api_screen.dc_screen);
-                DeleteObject(win_api_screen.captured_hbmp);
-                DeleteObject(hbmp_from_bytes);
+                DeleteDC(win_api_screen.dc_screen).unwrap();
+                DeleteObject(win_api_screen.captured_hbmp).unwrap();
+                DeleteObject(hbmp_from_bytes).unwrap();
             }
         }
     }
@@ -435,7 +442,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// e.g., every time a white (B=255, G=255, R=255, A=any_u8_value) is to be sent to a pixel it must be sent as completely transparent, invisible, hidden
     /// bgr_u32_to_hide must not contain A (e.g.: 0x00FF 8080, A must be zero for the hiding to work)
     /// The color chunks must be in BGRA, if Vec<u32> and the CPU has little endian then the color chunks must be in ARGB
-    fn send_bytes_to_screen_alpha_disabled_hide_specific_bgr(vec :&Vec<T>, dst_ul_x :i32, dst_ul_y :i32, area_width :u32, area_height :u32, win_api_screen: &WindowsApiScreen, hide_b :u8, hide_g :u8, hide_r :u8) {
+    fn send_bytes_to_screen_alpha_disabled_hide_specific_bgr(vec :&[T], dst_ul_x :i32, dst_ul_y :i32, area_width :u32, area_height :u32, win_api_screen: &WindowsApiScreen, hide_b :u8, hide_g :u8, hide_r :u8) {
         unsafe {
             //let mut vec :Vec<u8> = vec![0,0,255,255,0,0,255,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255,255,0,0,255];
             
@@ -530,7 +537,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // so the matching is done on the BGR values alone
                 // use fn bgra_to_abgr_u32(b,g,r,a) to get the u32 value out of u8 bgra values
                 bgr_u32_to_hide.to_owned()
-              );
+              ).unwrap();
             //std::mem::forget(vec);
     
             // If the win_api_screen were made for a single run delete them
@@ -540,9 +547,9 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // An application should always replace a new object with the original,
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
-                DeleteDC(win_api_screen.dc_screen);
-                DeleteObject(win_api_screen.captured_hbmp);
-                DeleteObject(hbmp_from_bytes);
+                DeleteDC(win_api_screen.dc_screen).unwrap();
+                DeleteObject(win_api_screen.captured_hbmp).unwrap();
+                DeleteObject(hbmp_from_bytes).unwrap();
             }
         }
     }
@@ -588,8 +595,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // An application should always replace a new object with the original,
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
-                DeleteDC(win_api_screen.dc_screen);
-                DeleteObject(win_api_screen.captured_hbmp);
+                DeleteDC(win_api_screen.dc_screen).unwrap();
+                DeleteObject(win_api_screen.captured_hbmp).unwrap();
             }
 
         }
@@ -652,8 +659,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             // An application should always replace a new object with the original,
             // default object after it has finished drawing with the new object.
             SelectObject(captured_screen, hbmp_replace);
-            DeleteDC(captured_screen);
-            DeleteObject(captured_hbmp);
+            DeleteDC(captured_screen).unwrap();
+            DeleteObject(captured_hbmp).unwrap();
         }
     }
 
