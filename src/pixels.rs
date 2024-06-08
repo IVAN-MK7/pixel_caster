@@ -415,6 +415,19 @@ impl PixelsCollection<u8> {
     }
 }
 
+
+impl<T: PixelValues<T>> PixelsCollection<T> {
+    pub fn coord_to_index(&self, x: usize, y: usize) -> usize {
+        (self.width * y + x) * (self.units_per_pixel as usize)
+    }
+
+    /// From the given `x` `y` coordinate on its `bytes`' image, applies the provided offset values
+    /// and returns the resulting coordinate's index.
+    pub fn coord_to_index_with_offset_coord(&self, x: usize, y: usize, offset_x: isize, offset_y: isize) -> usize {
+        ((self.width as isize * (y as isize + offset_y) + (x as isize + offset_x)) * (self.units_per_pixel as isize)) as usize
+    }
+}
+
 /// Measure of either Width or Height
 pub enum ResizeSize {
     Width(usize),
