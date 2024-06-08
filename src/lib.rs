@@ -27,6 +27,7 @@ pub mod bgra_management;
 pub mod pixels_string;
 
 /// Stuff used to work with the winapi
+#[derive(Clone)]
 pub struct WindowsApiScreen {
     /// Gets a handle (H) to a device context (DC) for the client area,
     /// in this case for the entire virtual screen (not just a monitor),
@@ -44,6 +45,7 @@ pub struct WindowsApiScreen {
 }
 
 /// Contains the values needed to locate the area of the screen to work with
+#[derive(Clone)]
 pub struct ScreenArea {
     /// X dimension (horizontal) position of the upper left corner of the rectangle that delimits the needed screen area
     upperleftcorner_x: i32,
@@ -56,6 +58,7 @@ pub struct ScreenArea {
 }
 
 /// Screen is used to get/send color bytes from/to the screen in a straightforward way
+#[derive(Clone)]
 pub struct Screen<T: PixelValues<T> + Copy> {
     /// PixelsCollection containing color bytes data and info
     pixels: PixelsCollection<T>,
@@ -525,9 +528,9 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // An application should always replace a new object with the original,
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
-                DeleteDC(win_api_screen.dc_screen).unwrap();
-                DeleteObject(win_api_screen.captured_hbmp).unwrap();
-                DeleteObject(hbmp_from_bytes).unwrap();
+                let _ = DeleteDC(win_api_screen.dc_screen);
+                let _ = DeleteObject(win_api_screen.captured_hbmp);
+                let _ = DeleteObject(hbmp_from_bytes);
             }
         }
     }

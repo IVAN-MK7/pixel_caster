@@ -18,7 +18,7 @@ pub fn bit_block_transfer(
 ) {
     unsafe {
         // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-bitblt
-        BitBlt(
+        match BitBlt(
             // A handle to the destination device context
             dst,
             // The x-coordinate, in logical units, of the upper-left corner of the destination rectangle
@@ -37,7 +37,9 @@ pub fn bit_block_transfer(
             src_ulc_y,
             // A raster-operation code. These codes define how the color data for the source rectangle is to be combined with the color data for the destination rectangle to achieve the final color
             SRCCOPY,
-        )
-        .unwrap();
+        ) {
+            Ok(_) => (),
+            Err(e) => println!("bit_block_transfer error: {}", e),
+        };
     }
 }
