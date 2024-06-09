@@ -1084,6 +1084,7 @@ impl CharsCollection<u8> {
         });
         self.bgra = BGRA(b, g, r, a);
     }
+
     /// Set the provided BGR
     pub fn set_bgr(&mut self, b: u8, g: u8, r: u8) {
         self.chars
@@ -1091,6 +1092,16 @@ impl CharsCollection<u8> {
             .for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
         self.bgra = BGRA(b, g, r, self.bgra.3);
     }
+
+    /// Set the provided BGR
+    pub fn set_bgr_from_array(&mut self, bgr: [u8; 3]) {
+        let (b, g, r) = (bgr[0], bgr[1], bgr[2]);
+        self.chars
+            .iter_mut()
+            .for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
+        self.bgra = BGRA(b, g, r, self.bgra.3);
+    }
+    
     pub fn create_pixels_string(&self, string: &str, char_spacing: isize) -> PixelsString {
         let mut vec: Vec<u8> = Vec::new();
         let mut vec_width = 0;
