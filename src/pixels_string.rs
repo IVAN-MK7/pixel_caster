@@ -1,5 +1,6 @@
 use image;
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 use std::{ffi::OsStr, fs, io, path::Path};
 
 /// added because PixelsCollection was moved to a new module, "pub" in order to make it callable from this module pixels_string::PixelsCollection for backwards compatibility, to remove at version 2.0
@@ -577,7 +578,7 @@ mod tests {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Deserialize, Serialize)]
 pub struct CardinalPoints {
     pub top_y: usize,
     pub top_y_index: usize,
@@ -622,6 +623,20 @@ impl CardinalPoints {
         self.update_if_expands_horizontal(c_p.right_x, c_p.right_x_index);
         self.update_if_expands_vertical(c_p.top_y, c_p.top_y_index);
         self.update_if_expands_vertical(c_p.bottom_y, c_p.bottom_y_index);
+    }
+
+    pub fn width(&self) -> Result<usize, String> {
+        if self.right_x < self.left_x {
+            return Err("No fully paque pixels found".to_string());
+        }
+        Ok(self.right_x - self.left_x + 1)
+    }
+
+    pub fn height(&self) -> Result<usize, String> {
+        if self.bottom_y < self.top_y {
+            return Err("No fully paque pixels found".to_string());
+        }
+        Ok(self.bottom_y - self.top_y + 1)
     }
 }
 
@@ -779,6 +794,30 @@ pub fn pixel_grabber(
         rx = 0;
     }
     (pixels_captured, values)
+}
+
+
+/// Width and height restricted to the fully opaque area of the provided image.
+pub fn get_fully_opaque_area_range(image: &PixelsCollection<u8>) -> Result<(usize, usize), String> {
+    let values = get_cardinal_points_until_nonestreak_x(&image.bytes, image.height, 0, 0, image.width, image.height, image.width, |_,_,_,a| a == 255);
+    Ok((values.width()?, values.height()?))
+}
+
+
+/// From a starting pixel scans an area of the given range and populates a new Vec<u8> with the given range with pixels.
+pub fn pixels_from_area(buffer: &[u8], height: usize, start_x: usize, start_y: usize, range_x: usize, range_y: usize) -> Vec<u8> {
+    
+    // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
+    let stride = buffer.len() / height;
+
+    let mut pixels_captured = Vec::with_capacity(range_x * range_y * 4);
+    for y in start_y..start_y+range_y {
+        for x in start_x..start_x+range_x {
+            let i = stride * y + 4 * x;
+            pixels_captured.extend_from_slice(&[ buffer[i], buffer[i+1], buffer[i+2], buffer[i+3] ]);
+        }
+    }
+    pixels_captured
 }
 
 /// Additional implementations that enables .png importing and CharsCollection creation

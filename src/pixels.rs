@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::bgra_management::{
     u32_bytes_oredered_indexes_and_fullvalues, ColorAlteration, SwitchBytes,
 };
@@ -131,7 +133,7 @@ impl PixelValues<u32> for u32 {
 }
 
 /// Contains pixels' color bytes data, in BGRA format, and info
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PixelsCollection<T: PixelValues<T>> {
     /// Width of the rectangle represented by the color bytes
     pub width: usize,
