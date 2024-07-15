@@ -43,6 +43,8 @@ pub struct WindowsApiScreen {
     /// Determines if the values are to keep after use or not
     is_static: bool,
 }
+unsafe impl Send for WindowsApiScreen {}
+unsafe impl Sync for WindowsApiScreen {}
 
 /// Contains the values needed to locate the area of the screen to work with
 #[derive(Clone)]
