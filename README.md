@@ -74,6 +74,12 @@ The cargo run --example text_from_png_chars_sample_to_screen example will import
 
 Works only on Windows OS, starting from Windows 2000
 
+### Linux prerequisites
+
+```sh
+sudo apt-get install libx11-dev
+```
+  
 
 ## License
 

@@ -23,6 +23,9 @@ pub trait PixelValues<T> {
 
     /// Returns .units_per_pixel() for the type specified at &self
     fn get_units_per_pixel(&self) -> u8;
+
+    fn to_u32(&self) -> u32;
+    fn from_u32(pixel: u32) -> Self;
 }
 impl PixelValues<u8> for u8 {
     fn create_adjusted_vec(vec: &[u8]) -> Vec<u8> {
@@ -68,6 +71,13 @@ impl PixelValues<u8> for u8 {
     }
     fn get_units_per_pixel(&self) -> u8 {
         4
+    }
+    fn to_u32(&self) -> u32 {
+        *self as u32
+    }
+
+    fn from_u32(pixel: u32) -> Self {
+        (pixel & 0xFF) as u8
     }
 }
 impl PixelValues<u32> for u32 {
@@ -129,6 +139,13 @@ impl PixelValues<u32> for u32 {
     }
     fn get_units_per_pixel(&self) -> u8 {
         1
+    }
+    fn to_u32(&self) -> u32 {
+        *self
+    }
+
+    fn from_u32(pixel: u32) -> Self {
+        pixel
     }
 }
 
@@ -425,8 +442,15 @@ impl<T: PixelValues<T>> PixelsCollection<T> {
 
     /// From the given `x` `y` coordinate on its `bytes`' image, applies the provided offset values
     /// and returns the resulting coordinate's index.
-    pub fn coord_to_index_with_offset_coord(&self, x: usize, y: usize, offset_x: isize, offset_y: isize) -> usize {
-        ((self.width as isize * (y as isize + offset_y) + (x as isize + offset_x)) * (self.units_per_pixel as isize)) as usize
+    pub fn coord_to_index_with_offset_coord(
+        &self,
+        x: usize,
+        y: usize,
+        offset_x: isize,
+        offset_y: isize,
+    ) -> usize {
+        ((self.width as isize * (y as isize + offset_y) + (x as isize + offset_x))
+            * (self.units_per_pixel as isize)) as usize
     }
 }
 

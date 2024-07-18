@@ -9,6 +9,8 @@ repository = "https://github.com/IVAN-MK7/pixel_caster/"
 readme = "README.md"
 categories = ["os::windows-apis"]
 license = "MIT"
+[target.'cfg(target_os = "linux")'.package] # TODO: fix, it gets ignored on windows, but not applied on linux
+build = "src/build.rs"
 
 # for performance (on Windows OS): "$env:RUSTFLAGS = '-Ctarget-cpu=native'; cargo run --release", and uncomment the lines below
 #[profile.release]
@@ -53,13 +55,14 @@ name = "performance_test"
 path = "tests/performance_test.rs"
 
 [dependencies]
-libc = "0.2.155"
 image = { version = "0.25.1", optional = true }
 lazy_static = { version = "1.5.0", optional = true }
 #pixel_caster = { path = "../pixel_caster", default-features = false  } default-features = false : to not use the pixels_string feature (and its relative dependencies/optional features, like the "image" crate). path instead of version to load the locally store crate
 
 serde = { version = "1.0", features = ["derive"] }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+x11 = "2.21.0"
 
 [dev-dependencies]
 eager = "0.1.0"
@@ -72,6 +75,8 @@ default = ["pixels_string"]
 pixels_string = ["dep:image", "dep:lazy_static"]
 
 
+[target.'cfg(windows)'.dependencies]
+libc = "0.2.155"
 [dependencies.windows]
 version = "0.58.0"
 
