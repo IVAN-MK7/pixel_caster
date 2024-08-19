@@ -1,3 +1,4 @@
+use image::{DynamicImage, ImageBuffer, Rgb, Rgba};
 use serde::{Deserialize, Serialize};
 
 use crate::bgra_management::{
@@ -440,4 +441,66 @@ impl PixelsCollection<u32> {
     pub fn switch_bytes(&mut self, i1: usize, i2: usize) {
         <u32>::switch_bytes(&mut self.bytes, i1, i2);
     }
+}
+
+/// Note: this function assumes that the provided `image_data` is already in BGR(A) format,
+/// if it's not switching the Red and Blue bytes with `<u8>::switch_bytes(&mut pixels_collection.bytes, 0, 2)`.
+pub fn dynamic_image_data_to_pixels_collection(image_data: Vec<u8>, has_alpha_channel: bool) -> Result<PixelsCollection::<u8>, String> {
+    // Load the image from the png data
+    let image = match image::load_from_memory(&image_data) {
+        Ok(img) => img,
+        Err(e) => return Err(format!("Error loading image: {}", e)),
+    };
+    dynamic_image_to_pixels_collection(image, has_alpha_channel)
+}
+/// Note: this function assumes that the provided `image` is already in BGR(A) format,
+/// if it's not switching the Red and Blue bytes with `<u8>::switch_bytes(&mut pixels_collection.bytes, 0, 2)`.
+pub fn dynamic_image_to_pixels_collection(image: DynamicImage, has_alpha_channel: bool) -> Result<PixelsCollection::<u8>, String> {
+    // Convert the image to BGR(A)
+    let (bgra_bytes, width, height) = if has_alpha_channel {
+        let bgr_image = image.to_rgba8();
+        let (w, h) = bgr_image.dimensions();
+        (bgr_image.into_raw(), w, h)
+    } else {
+        println!("Creating BGRA vec");
+        let bgr_image = image.to_rgb8();
+        let (w, h) = bgr_image.dimensions();
+        let bgr_bytes = bgr_image.into_raw();
+        let mut bgra_bytes = vec![];
+        bgr_bytes.chunks_exact(3).for_each(|c| {
+            bgra_bytes.extend_from_slice(c);
+            bgra_bytes.push(255);
+        });
+        (bgra_bytes, w, h)
+    };
+
+    Ok(PixelsCollection::<u8>::create(width as usize, height as usize, bgra_bytes).unwrap())
+}
+pub fn pixels_collection_to_dynamic_image_data(pixels_collection: PixelsCollection::<u8>, keep_alpha_channel: bool) -> Result<Vec::<u8>, String> {
+    use std::io::Cursor;
+
+    // Convert BGRA to RGBA
+    /*let mut rgba_data = Vec::with_capacity(pixels_collection.bytes.len());
+    for chunk in pixels_collection.bytes.chunks_exact(4) {
+        rgba_data.push(chunk[2]); // R
+        rgba_data.push(chunk[1]); // G
+        rgba_data.push(chunk[0]); // B
+        rgba_data.push(chunk[3]); // A
+    }*/
+
+    let mut png_data = Vec::new();
+    // Create an ImageBuffer from the BGR(A) data
+    if keep_alpha_channel {
+        let img = ImageBuffer::<Rgba<u8>, _>::from_raw(pixels_collection.width as u32, pixels_collection.height as u32, pixels_collection.bytes)
+            .ok_or("Failed to create image buffer")?;
+        img.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png).map_err(|e| e.to_string())?;
+    } else {
+        let mut vec = vec![];
+        pixels_collection.bytes.chunks_exact(4).for_each(|c| vec.extend_from_slice(&c[0..3]));
+
+        let img = ImageBuffer::<Rgb<u8>, _>::from_raw(pixels_collection.width as u32, pixels_collection.height as u32, vec)
+            .ok_or("Failed to create image buffer")?;
+        img.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png).map_err(|e| e.to_string())?;
+    };
+    Ok(png_data)
 }
