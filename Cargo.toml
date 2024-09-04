@@ -2,7 +2,7 @@
 name = "pixel_caster"
 description = "Cast pixels to and from the screen by managing their RGBA values. Import characters from .png files"
 keywords = ["screen", "cast", "retrieve", "pixel", "RGBA"]
-version = "1.0.5"
+version = "1.1.0"
 edition = "2021"
 authors = ["IVAN MK7 <ivan@mk7.tech>"]
 repository = "https://github.com/IVAN-MK7/pixel_caster/"
@@ -53,12 +53,12 @@ name = "performance_test"
 path = "tests/performance_test.rs"
 
 [dependencies]
-libc = "0.2.155"
-image = { version = "0.25.1", optional = true }
+libc = "0.2.158"
+image = { version = "0.25.2", optional = true }
 lazy_static = { version = "1.5.0", optional = true }
 #pixel_caster = { path = "../pixel_caster", default-features = false  } default-features = false : to not use the pixels_string feature (and its relative dependencies/optional features, like the "image" crate). path instead of version to load the locally store crate
 
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.209", features = ["derive"] }
 
 
 [dev-dependencies]
