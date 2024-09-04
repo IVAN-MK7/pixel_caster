@@ -627,14 +627,14 @@ impl CardinalPoints {
 
     pub fn width(&self) -> Result<usize, String> {
         if self.right_x < self.left_x {
-            return Err("No fully paque pixels found".to_string());
+            return Err("No fully opaque pixels found".to_string());
         }
         Ok(self.right_x - self.left_x + 1)
     }
 
     pub fn height(&self) -> Result<usize, String> {
         if self.bottom_y < self.top_y {
-            return Err("No fully paque pixels found".to_string());
+            return Err("No fully opaque pixels found".to_string());
         }
         Ok(self.bottom_y - self.top_y + 1)
     }

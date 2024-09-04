@@ -462,7 +462,6 @@ pub fn dynamic_image_to_pixels_collection(image: DynamicImage, has_alpha_channel
         let (w, h) = bgr_image.dimensions();
         (bgr_image.into_raw(), w, h)
     } else {
-        println!("Creating BGRA vec");
         let bgr_image = image.to_rgb8();
         let (w, h) = bgr_image.dimensions();
         let bgr_bytes = bgr_image.into_raw();
