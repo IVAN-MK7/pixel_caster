@@ -1,7 +1,9 @@
 use pixel_caster::*;
 /// main() will just get and send some bytes to verify that the screen reacts to the new values
 fn main() {
-    println!("\r\nJust playing with some pixels, to verify that the screen reacts to the new values (check the top-left corner)");
+    println!(
+        "\r\nJust playing with some pixels, to verify that the screen reacts to the new values (check the top-left corner)"
+    );
 
     let mut screen_area_to_capture_upperleftcorner_x = 60;
     let mut screen_area_to_capture_upperleftcorner_y = 60;

@@ -39,7 +39,9 @@ fn main() {
     let area_width = (bytes.len() / 4) as u32;
     let area_height = 1;
 
-    println!("\r\nA Vec<u8> containing 64 bytes, representing a line of 16 x 1 pixels, will now be sent to the screen at the location :");
+    println!(
+        "\r\nA Vec<u8> containing 64 bytes, representing a line of 16 x 1 pixels, will now be sent to the screen at the location :"
+    );
     println!(
         "X : {}, Y : {}",
         screen_destination_area_upperleftcorner_x, screen_destination_area_upperleftcorner_y

@@ -2,7 +2,7 @@ use image::{DynamicImage, ImageBuffer, Rgb, Rgba};
 use serde::{Deserialize, Serialize};
 
 use crate::bgra_management::{
-    u32_bytes_oredered_indexes_and_fullvalues, ColorAlteration, SwitchBytes,
+    ColorAlteration, SwitchBytes, u32_bytes_oredered_indexes_and_fullvalues,
 };
 
 /// BGRA for the invisible pixels (those to not display, Alpha = 0). B=G=R=A=0 combination stands for completely transparent black
@@ -156,7 +156,7 @@ impl<T: PixelValues<T>> PixelsCollection<T> {
         bytes: Vec<T>,
     ) -> Result<PixelsCollection<T>, String> {
         // if bytes.len()%4 != 0
-        if bytes.len() % <T>::units_per_pixel() as usize != 0 {
+        if !bytes.len().is_multiple_of(<T>::units_per_pixel() as usize) {
             return Err("provided Vec<u8>'s length must be divisible by 4, as it takes 4 values (BGRA, in Vec<u8>) to get the resulting color for each pixel".to_string());
         }
         if bytes.len() != width * height * <T>::units_per_pixel() as usize {
@@ -418,7 +418,6 @@ impl PixelsCollection<u8> {
     }
 }
 
-
 impl<T: PixelValues<T>> PixelsCollection<T> {
     pub fn coord_to_index(&self, x: usize, y: usize) -> usize {
         (self.width * y + x) * (self.units_per_pixel as usize)
@@ -426,8 +425,15 @@ impl<T: PixelValues<T>> PixelsCollection<T> {
 
     /// From the given `x` `y` coordinate on its `bytes`' image, applies the provided offset values
     /// and returns the resulting coordinate's index.
-    pub fn coord_to_index_with_offset_coord(&self, x: usize, y: usize, offset_x: isize, offset_y: isize) -> usize {
-        ((self.width as isize * (y as isize + offset_y) + (x as isize + offset_x)) * (self.units_per_pixel as isize)) as usize
+    pub fn coord_to_index_with_offset_coord(
+        &self,
+        x: usize,
+        y: usize,
+        offset_x: isize,
+        offset_y: isize,
+    ) -> usize {
+        ((self.width as isize * (y as isize + offset_y) + (x as isize + offset_x))
+            * (self.units_per_pixel as isize)) as usize
     }
 }
 
@@ -445,7 +451,10 @@ impl PixelsCollection<u32> {
 
 /// Note: this function assumes that the provided `image_data` is already in BGR(A) format,
 /// if it's not switching the Red and Blue bytes with `<u8>::switch_bytes(&mut pixels_collection.bytes, 0, 2)`.
-pub fn dynamic_image_data_to_pixels_collection(image_data: Vec<u8>, has_alpha_channel: bool) -> Result<PixelsCollection::<u8>, String> {
+pub fn dynamic_image_data_to_pixels_collection(
+    image_data: Vec<u8>,
+    has_alpha_channel: bool,
+) -> Result<PixelsCollection<u8>, String> {
     // Load the image from the png data
     let image = match image::load_from_memory(&image_data) {
         Ok(img) => img,
@@ -455,7 +464,10 @@ pub fn dynamic_image_data_to_pixels_collection(image_data: Vec<u8>, has_alpha_ch
 }
 /// Note: this function assumes that the provided `image` is already in BGR(A) format,
 /// if it's not switching the Red and Blue bytes with `<u8>::switch_bytes(&mut pixels_collection.bytes, 0, 2)`.
-pub fn dynamic_image_to_pixels_collection(image: DynamicImage, has_alpha_channel: bool) -> Result<PixelsCollection::<u8>, String> {
+pub fn dynamic_image_to_pixels_collection(
+    image: DynamicImage,
+    has_alpha_channel: bool,
+) -> Result<PixelsCollection<u8>, String> {
     // Convert the image to BGR(A)
     let (bgra_bytes, width, height) = if has_alpha_channel {
         let bgr_image = image.to_rgba8();
@@ -475,7 +487,10 @@ pub fn dynamic_image_to_pixels_collection(image: DynamicImage, has_alpha_channel
 
     Ok(PixelsCollection::<u8>::create(width as usize, height as usize, bgra_bytes).unwrap())
 }
-pub fn pixels_collection_to_dynamic_image_data(pixels_collection: PixelsCollection::<u8>, keep_alpha_channel: bool) -> Result<Vec::<u8>, String> {
+pub fn pixels_collection_to_dynamic_image_data(
+    pixels_collection: PixelsCollection<u8>,
+    keep_alpha_channel: bool,
+) -> Result<Vec<u8>, String> {
     use std::io::Cursor;
 
     // Convert BGRA to RGBA
@@ -490,16 +505,26 @@ pub fn pixels_collection_to_dynamic_image_data(pixels_collection: PixelsCollecti
     let mut png_data = Vec::new();
     // Create an ImageBuffer from the BGR(A) data
     if keep_alpha_channel {
-        let img = ImageBuffer::<Rgba<u8>, _>::from_raw(pixels_collection.width as u32, pixels_collection.height as u32, pixels_collection.bytes)
-            .ok_or("Failed to create image buffer")?;
-        img.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png).map_err(|e| e.to_string())?;
+        let img = ImageBuffer::<Rgba<u8>, _>::from_raw(
+            pixels_collection.width as u32,
+            pixels_collection.height as u32,
+            pixels_collection.bytes,
+        )
+        .ok_or("Failed to create image buffer")?;
+        img.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png)
+            .map_err(|e| e.to_string())?;
     } else {
         let mut vec = vec![];
         pixels_collection.bytes.chunks_exact(4).for_each(|c| vec.extend_from_slice(&c[0..3]));
 
-        let img = ImageBuffer::<Rgb<u8>, _>::from_raw(pixels_collection.width as u32, pixels_collection.height as u32, vec)
-            .ok_or("Failed to create image buffer")?;
-        img.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png).map_err(|e| e.to_string())?;
+        let img = ImageBuffer::<Rgb<u8>, _>::from_raw(
+            pixels_collection.width as u32,
+            pixels_collection.height as u32,
+            vec,
+        )
+        .ok_or("Failed to create image buffer")?;
+        img.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png)
+            .map_err(|e| e.to_string())?;
     };
     Ok(png_data)
 }

@@ -1,11 +1,16 @@
-use pixel_caster::bgra_management::{bytes_matchers, SwitchBytes};
-use pixel_caster::{pixels_string::*, PixelsCollection, *};
+#![cfg(test)]
+
+use serial_test::serial;
+
+use pixel_caster::bgra_management::{SwitchBytes, bytes_matchers};
+use pixel_caster::{PixelsCollection, pixels_string::*, *};
 
 #[test]
+#[serial]
 /// Gets a PixelsCollection from a .png, then attempts to create a CharsCollection from it
 fn png_to_char_collection() {
     let image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/transparent_green_40px_chars_sample__transparent_background.png",
+        "fonts/transparent_green_40px_chars_sample__transparent_background.png",
     )
     .unwrap();
 
@@ -41,7 +46,7 @@ fn png_to_char_collection() {
     }
 
     let image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png",
+        "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
 
@@ -59,9 +64,7 @@ fn png_to_char_collection() {
             // create a string and print it on the screen
             let mut string_from_string_png = opaque_grey_scale_chars_white_background
                 .create_pixels_string("testing generated_text!^", 3);
-            string_from_string_png
-                .pixels
-                .set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
+            string_from_string_png.pixels.set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
             Screen::update_area_custom(
                 &string_from_string_png.pixels.bytes,
                 10,
@@ -77,7 +80,7 @@ fn png_to_char_collection() {
     }
 
     let mut image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png",
+        "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
     image.bytes = PixelsCollection::white_background_to_transparency_gradient(&image.bytes);
@@ -110,7 +113,7 @@ fn png_to_char_collection() {
     }
 
     let mut image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png",
+        "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
     PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
@@ -149,6 +152,7 @@ fn png_to_char_collection() {
 
 /// Attempts to create a CharsCollection from a folder of .png, then creates and alterates its clones
 #[test]
+#[serial]
 fn char_collection_alteration() {
     let threshold_black_chars_transparent_background = CharsCollection::from_pngs_folder("fonts/exports/from_opaque_grey_scale_12px_chars_sample__white_background/threshold_black__transparent_background").unwrap();
 
@@ -169,9 +173,7 @@ fn char_collection_alteration() {
 
     let mut pixels_string_black_white_background = threshold_black_chars_white_background
         .create_pixels_string("black test text with white background !", 1);
-    pixels_string_black_white_background
-        .pixels
-        .set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
+    pixels_string_black_white_background.pixels.set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
 
     crate::Screen::update_area_custom(
         &pixels_string_black_white_background.pixels.bytes,
@@ -202,6 +204,7 @@ fn char_collection_alteration() {
 }
 
 #[test]
+#[serial]
 fn copy_and_paste_pixels() {
     let screen_area_to_capture_upperleftcorner_x = 100;
     let screen_area_to_capture_upperleftcorner_y = 100;
@@ -222,10 +225,23 @@ fn copy_and_paste_pixels() {
         PixelsSendMode::AlphaEnabled,
     );
 
-    println!("Each pixel's color is obtained by its BGRA values combination, in a Vector of u8 those 4 values occupy 1 position each, in a Vector of u32 those 4 values occupy together just one position.");
-    println!("To contain the BGRA (Blue, Green, Red, Alpha) values of a single pixel a Vec<u8> would have a lenght of 4, a Vec<u32> would have a lenght of just 1");
-    println!("The provided screen area (starting at X: {}, Y: {}) has a width of: {}px and a height of: {}px, for a total pixel count of {}", screen_area_to_capture_upperleftcorner_x, screen_area_to_capture_upperleftcorner_y, pixels_width, pixels_height, pixels_width * pixels_height);
-    println!("The BGRA values of the given screen area have been retrieved both into a Vec<u8> and a Vec<u32>");
+    println!(
+        "Each pixel's color is obtained by its BGRA values combination, in a Vector of u8 those 4 values occupy 1 position each, in a Vector of u32 those 4 values occupy together just one position."
+    );
+    println!(
+        "To contain the BGRA (Blue, Green, Red, Alpha) values of a single pixel a Vec<u8> would have a lenght of 4, a Vec<u32> would have a lenght of just 1"
+    );
+    println!(
+        "The provided screen area (starting at X: {}, Y: {}) has a width of: {}px and a height of: {}px, for a total pixel count of {}",
+        screen_area_to_capture_upperleftcorner_x,
+        screen_area_to_capture_upperleftcorner_y,
+        pixels_width,
+        pixels_height,
+        pixels_width * pixels_height
+    );
+    println!(
+        "The BGRA values of the given screen area have been retrieved both into a Vec<u8> and a Vec<u32>"
+    );
     println!(
         "screen_u8.bytes: first value: {}, length: {}",
         screen_u8.get_bytes()[0],
@@ -256,6 +272,7 @@ fn copy_and_paste_pixels() {
 }
 
 #[test]
+#[serial]
 fn copy_and_paste_pixels_slimmed() {
     let screen_area_to_capture_upperleftcorner_x = 100;
     let screen_area_to_capture_upperleftcorner_y = 100;
@@ -276,10 +293,23 @@ fn copy_and_paste_pixels_slimmed() {
     screen_u8.scan_area();
     screen_u8_dst.update_area_from_vec(screen_u8.get_bytes());
 
-    println!("Each pixel's color is obtained by its BGRA values combination, in a Vector of u8 those 4 values occupy 1 position each, in a Vector of u32 those 4 values occupy together just one position.");
-    println!("To contain the BGRA (Blue, Green, Red, Alpha) values of a single pixel a Vec<u8> would have a lenght of 4, a Vec<u32> would have a lenght of just 1");
-    println!("The provided screen area (starting at X: {}, Y: {}) has a width of: {}px and a height of: {}px, for a total pixel count of {}", screen_area_to_capture_upperleftcorner_x, screen_area_to_capture_upperleftcorner_y, pixels_width, pixels_height, pixels_width * pixels_height);
-    println!("The BGRA values of the given screen area have been retrieved both into a Vec<u8> and a Vec<u32>");
+    println!(
+        "Each pixel's color is obtained by its BGRA values combination, in a Vector of u8 those 4 values occupy 1 position each, in a Vector of u32 those 4 values occupy together just one position."
+    );
+    println!(
+        "To contain the BGRA (Blue, Green, Red, Alpha) values of a single pixel a Vec<u8> would have a lenght of 4, a Vec<u32> would have a lenght of just 1"
+    );
+    println!(
+        "The provided screen area (starting at X: {}, Y: {}) has a width of: {}px and a height of: {}px, for a total pixel count of {}",
+        screen_area_to_capture_upperleftcorner_x,
+        screen_area_to_capture_upperleftcorner_y,
+        pixels_width,
+        pixels_height,
+        pixels_width * pixels_height
+    );
+    println!(
+        "The BGRA values of the given screen area have been retrieved both into a Vec<u8> and a Vec<u32>"
+    );
     println!(
         "screen_u8.bytes: first value: {}, length: {}",
         screen_u8.get_bytes()[0],
@@ -310,6 +340,7 @@ fn copy_and_paste_pixels_slimmed() {
 }
 
 #[test]
+#[serial]
 fn test_send_bytes_transparency() {
     let image_u8_bgra =
         PixelsCollection::<u8>::from_png("media/Logo_MK7_Transparent_Bg_ColorsWithHalfAlpha.png")
@@ -349,6 +380,7 @@ fn test_send_bytes_transparency() {
 }
 
 #[test]
+#[serial]
 fn test_get_bytes() {
     let screen_area_upperleftcorner_x = 100;
     let screen_area_upperleftcorner_y = 100;

@@ -5,7 +5,7 @@ use std::{ffi::OsStr, fs, io, path::Path};
 
 /// added because PixelsCollection was moved to a new module, "pub" in order to make it callable from this module pixels_string::PixelsCollection for backwards compatibility, to remove at version 2.0
 pub use crate::PixelsCollection;
-use crate::{add_limited, bgra_management::*, PixelValues, BGRA_INVISIBLE_PIXEL};
+use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, bgra_management::*};
 
 pub struct CharsCollectionCreator<'a> {
     pixels_collection: &'a PixelsCollection<u8>,
@@ -37,7 +37,7 @@ impl<'a> CharsCollectionCreator<'a> {
         } = *self;
 
         // edges, cardinal points of the range of pixels that pass the bgra_matcher (e.g. : bgra_matchers::visible = which werent transparent, where A > 0)
-        let img_visible_range = get_cardinal_points_until_nonestreak_x(
+        let img_visible_range = match get_cardinal_points_until_nonestreak_x(
             &pixels_collection.bytes,
             pixels_collection.height,
             start_x,
@@ -46,19 +46,23 @@ impl<'a> CharsCollectionCreator<'a> {
             range_y,
             range_x,
             bgra_matcher,
-        );
+        ) {
+            Some(c_p) => c_p,
+            None => {
+                return Err(
+                    "No image pixels matching the bgra_matcher found in provided range.".to_owned()
+                );
+            }
+        };
 
         let original_range_x = range_x;
 
-        let mut char_u8_vec = CharsCollection {
-            chars: Vec::new(),
-            path: "".to_string(),
-            bgra: BGRA(0, 0, 0, 255),
-        };
+        let mut char_u8_vec =
+            CharsCollection { chars: Vec::new(), path: "".to_string(), bgra: BGRA(0, 0, 0, 255) };
 
         for char in chars_string.chars() {
             // this char's cardinal points
-            let values = get_cardinal_points_until_nonestreak_x(
+            let values = match get_cardinal_points_until_nonestreak_x(
                 &pixels_collection.bytes,
                 pixels_collection.height,
                 start_x,
@@ -67,7 +71,15 @@ impl<'a> CharsCollectionCreator<'a> {
                 range_y,
                 min_px_space_between_chars,
                 bgra_matcher,
-            );
+            ) {
+                Some(c_p) => c_p,
+                None => {
+                    return Err(
+                        "No char pixels matching the bgra_matcher found in provided range."
+                            .to_owned(),
+                    );
+                }
+            };
 
             // with this char's cardinal points creates the most little range that still comprehends them and using that
             // creates a Vec<u8> that will be populated only with this character's pixels. those not passing the matcher will have their color set to BGRA_INVISIBLE_PIXEL (B=G=R=A=0)
@@ -125,15 +137,17 @@ impl<'a> CharsCollectionCreator<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{pixels_string::*, PixelsSendMode};
+    use crate::{PixelsSendMode, pixels_string::*};
 
     const DISPLAY_RESULTS: bool = true;
 
     #[test]
     fn string_of_chars() {
-        //let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+        create_dir_recursive("fonts/exports/").unwrap();
+
+        //let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
         let image_transparent_bkgrnd = PixelsCollection::<u8>::from_png(
-            "fonts/exports/transparent_green_40px_chars_sample__transparent_background.png",
+            "fonts/transparent_green_40px_chars_sample__transparent_background.png",
         )
         .unwrap();
         //let image_transparent_bkgrnd = PixelsCollection::from_png("media/chars_sample_40px_blue_whitebackground.png").unwrap();
@@ -154,7 +168,7 @@ mod tests {
         let range_y = image_transparent_bkgrnd.height;
 
         // range the extreme pixels which werent transparent (where A > 0)
-        let img_visible_range = get_cardinal_points_until_nonestreak_x(
+        let img_visible_range = match get_cardinal_points_until_nonestreak_x(
             &buffer,
             height,
             start_x,
@@ -163,7 +177,12 @@ mod tests {
             range_y,
             range_x,
             |_: u8, _: u8, _: u8, a: u8| -> bool { a > 0 },
-        );
+        ) {
+            Some(c_p) => c_p,
+            None => panic!(
+                "Could not set img_visible_range. No pixels matching the bgra_matcher found in provided range."
+            ),
+        };
 
         let original_range_x = range_x;
 
@@ -190,16 +209,13 @@ mod tests {
             .unwrap();
         }
 
-        let mut char_u8_vec: CharsCollection<u8> = CharsCollection {
-            chars: Vec::new(),
-            path: "".to_string(),
-            bgra: BGRA(0, 0, 0, 255),
-        };
+        let mut char_u8_vec: CharsCollection<u8> =
+            CharsCollection { chars: Vec::new(), path: "".to_string(), bgra: BGRA(0, 0, 0, 255) };
 
         let mut bytes_chars_poles = buffer.clone();
 
         for char in chars_string.chars() {
-            let values = get_cardinal_points_until_nonestreak_x(
+            let values = match get_cardinal_points_until_nonestreak_x(
                 &buffer,
                 height,
                 start_x,
@@ -208,7 +224,10 @@ mod tests {
                 range_y,
                 min_px_space_btwn_chars,
                 |_: u8, _: u8, _: u8, a: u8| -> bool { a > 0 },
-            );
+            ) {
+                Some(c_p) => c_p,
+                None => panic!("No pixels matching the bgra_matcher found in provided range."),
+            };
 
             // +1 because start and end values are included in the area, therefore if an area's first pixel is at 0 and it's last at 9 its range is 10, range is 9-0+1. Another e.g.: x starts at 10, ends at 40 : area = 31; 40 - 10 + 1
             let (pixels_captured, char_values) = pixel_grabber(
@@ -275,10 +294,7 @@ mod tests {
                     (0, 0),
                     (0, values.bottom_y - img_visible_range.top_y),
                     (char_values.right_x, 0),
-                    (
-                        char_values.right_x,
-                        values.bottom_y - img_visible_range.top_y,
-                    ),
+                    (char_values.right_x, values.bottom_y - img_visible_range.top_y),
                 ];
                 pixels_captured_clone.set_positions_bgra(
                     (values.bottom_y - img_visible_range.top_y) + 1,
@@ -395,9 +411,11 @@ mod tests {
 
     #[test]
     fn string_of_chars_with_highest_char_sides() {
-        //let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
+        create_dir_recursive("fonts/exports/").unwrap();
+
+        //let image_transparent_bkgrnd = PixelsCollection::from_png("fonts/opaque_grey_scale_12px_chars_sample__white_background.png").unwrap();
         let image_transparent_bkgrnd = PixelsCollection::<u8>::from_png(
-            "fonts/exports/transparent_green_40px_chars_sample__transparent_background.png",
+            "fonts/transparent_green_40px_chars_sample__transparent_background.png",
         )
         .unwrap();
         //let image_transparent_bkgrnd = PixelsCollection::from_png("media/chars_sample_40px_blue_whitebackground.png").unwrap();
@@ -415,7 +433,7 @@ mod tests {
         let range_y = image_transparent_bkgrnd.height;
 
         // range the extreme pixels which werent transparent (where A > 0)
-        let img_visible_range = get_cardinal_points_until_nonestreak_x(
+        let img_visible_range = match get_cardinal_points_until_nonestreak_x(
             &buffer,
             height,
             start_x,
@@ -424,7 +442,12 @@ mod tests {
             range_y,
             range_x,
             |_: u8, _: u8, _: u8, a: u8| -> bool { a > 0 },
-        );
+        ) {
+            Some(c_p) => c_p,
+            None => panic!(
+                "Could not set img_visible_range. No pixels matching the bgra_matcher found in provided range."
+            ),
+        };
 
         let original_range_x = range_x;
 
@@ -433,7 +456,7 @@ mod tests {
         let mut highest_height = 0;
 
         for char in chars_string.chars() {
-            let values = get_cardinal_points_until_nonestreak_x(
+            let values = match get_cardinal_points_until_nonestreak_x(
                 &buffer,
                 height,
                 start_x,
@@ -442,7 +465,10 @@ mod tests {
                 range_y,
                 min_px_space_btwn_chars,
                 |_: u8, _: u8, _: u8, a: u8| -> bool { a > 0 },
-            );
+            ) {
+                Some(c_p) => c_p,
+                None => panic!("No pixels matching the bgra_matcher found in provided range."),
+            };
 
             // +1 because start and end values are included in the area, therefore if an area's first pixel is at 0 and it's last at 9 its range is 10, range is 9-0+1. Another e.g.: x starts at 10, ends at 40 : area = 31; 40 - 10 + 1
             let (_, char_values) = pixel_grabber(
@@ -504,7 +530,7 @@ mod tests {
         let mut range_x = image_transparent_bkgrnd.width;
 
         for char in chars_string.chars() {
-            let values = get_cardinal_points_until_nonestreak_x(
+            let values = match get_cardinal_points_until_nonestreak_x(
                 &buffer,
                 height,
                 start_x,
@@ -513,7 +539,10 @@ mod tests {
                 range_y,
                 min_px_space_btwn_chars,
                 |_: u8, _: u8, _: u8, a: u8| -> bool { a > 0 },
-            );
+            ) {
+                Some(c_p) => c_p,
+                None => panic!("No pixels matching the bgra_matcher found in provided range."),
+            };
 
             if DISPLAY_RESULTS {
                 let heighest_char_top_from_this_char_bottom_side_marks = vec![
@@ -562,14 +591,8 @@ mod tests {
 
     #[test]
     fn hashmap_test() {
-        assert_eq!(
-            find_key_for_value(&CHARS, 'a'),
-            Some("LATIN SMALL LETTER A".to_string())
-        );
-        assert_eq!(
-            find_key_for_value(&CHARS, 'A'),
-            Some("LATIN CAPITAL LETTER A".to_string())
-        );
+        assert_eq!(find_key_for_value(&CHARS, 'a'), Some("LATIN SMALL LETTER A".to_string()));
+        assert_eq!(find_key_for_value(&CHARS, 'A'), Some("LATIN CAPITAL LETTER A".to_string()));
 
         //CHARS.insert("zero".to_string(), '0');
         //CHARS.insert("A".to_string(), 'A');
@@ -680,7 +703,7 @@ pub fn get_cardinal_points_until_nonestreak_x(
     range_y: usize,
     none_streak_x: usize,
     bgra_matcher: fn(u8, u8, u8, u8) -> bool,
-) -> CardinalPoints {
+) -> Option<CardinalPoints> {
     // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
     let stride = buffer.len() / height;
 
@@ -721,7 +744,12 @@ pub fn get_cardinal_points_until_nonestreak_x(
             break;
         }
     }
-    values
+
+    if values.top_y > values.bottom_y || values.left_x > values.right_x {
+        None
+    } else {
+        Some(values)
+    }
 }
 
 /// From a starting pixel scans an area of the given range and populates a new Vec<u8> with the given range with pixels that pass the bgra_matcher.
@@ -796,25 +824,37 @@ pub fn pixel_grabber(
     (pixels_captured, values)
 }
 
-
 /// Width and height restricted to the fully opaque area of the provided image.
 pub fn get_fully_opaque_area_range(image: &PixelsCollection<u8>) -> Result<(usize, usize), String> {
-    let values = get_cardinal_points_until_nonestreak_x(&image.bytes, image.height, 0, 0, image.width, image.height, image.width, |_,_,_,a| a == 255);
+    let values = match get_cardinal_points_until_nonestreak_x(&image.bytes, image.height, 0, 0, image.width, image.height, image.width, |_,_,_,a| a == 255) {
+        Some(c_p) => c_p,
+        None => return Err("Could not get the fully opaque area range. No pixels matching the bgra_matcher found in provided range.".to_owned()),
+    };
     Ok((values.width()?, values.height()?))
 }
 
-
 /// From a starting pixel scans an area of the given range and populates a new Vec<u8> with the given range with pixels.
-pub fn pixels_from_area(buffer: &[u8], height: usize, start_x: usize, start_y: usize, range_x: usize, range_y: usize) -> Vec<u8> {
-    
+pub fn pixels_from_area(
+    buffer: &[u8],
+    height: usize,
+    start_x: usize,
+    start_y: usize,
+    range_x: usize,
+    range_y: usize,
+) -> Vec<u8> {
     // how many buffer units there are in a horizontal, 1 pixel high, line across the screen
     let stride = buffer.len() / height;
 
     let mut pixels_captured = Vec::with_capacity(range_x * range_y * 4);
-    for y in start_y..start_y+range_y {
-        for x in start_x..start_x+range_x {
+    for y in start_y..start_y + range_y {
+        for x in start_x..start_x + range_x {
             let i = stride * y + 4 * x;
-            pixels_captured.extend_from_slice(&[ buffer[i], buffer[i+1], buffer[i+2], buffer[i+3] ]);
+            pixels_captured.extend_from_slice(&[
+                buffer[i],
+                buffer[i + 1],
+                buffer[i + 2],
+                buffer[i + 3],
+            ]);
         }
     }
     pixels_captured
@@ -950,11 +990,7 @@ impl PixelsChar<u8> {
         match crate::pixels_string::png_into_pixels_collection(png_path) {
             Ok(mut bytes) => {
                 bytes.switch_bytes(0, 2);
-                Ok(PixelsChar {
-                    char,
-                    char_name: char_name.to_string(),
-                    pixels: bytes,
-                })
+                Ok(PixelsChar { char, char_name: char_name.to_string(), pixels: bytes })
             }
             Err(err) => Err(err),
         }
@@ -988,11 +1024,8 @@ impl CharsCollection<u8> {
     /// Creates a new collection from a folder containing the chars in .png file format.
     /// The filenames that do not match those inside the CHARS hashmap will still be added, but will represent the default char '█'
     pub fn from_pngs_folder(dir: &str) -> io::Result<CharsCollection<u8>> {
-        let mut char_u8_vec = CharsCollection {
-            chars: Vec::new(),
-            path: dir.to_string(),
-            bgra: BGRA(0, 0, 0, 255),
-        };
+        let mut char_u8_vec =
+            CharsCollection { chars: Vec::new(), path: dir.to_string(), bgra: BGRA(0, 0, 0, 255) };
 
         for entry in fs::read_dir(Path::new(dir))? {
             let entry = entry?;
@@ -1038,11 +1071,7 @@ impl CharsCollection<u8> {
         };
         cc_except.chars.retain(|x| x.char != c_to_exclude);
         Self::export(
-            &format!(
-                "{}{}",
-                folder_path.trim_end_matches('\\'),
-                "\\mapped_in_CHARS\\"
-            ),
+            &format!("{}{}", folder_path.trim_end_matches('\\'), "\\mapped_in_CHARS\\"),
             &cc_except,
         )
     }
@@ -1056,11 +1085,7 @@ impl CharsCollection<u8> {
         };
         for c in &coll.chars {
             image::save_buffer_with_format(
-                format!(
-                    "{}{}.png",
-                    png_path.trim_end_matches('\\').to_owned() + "\\",
-                    c.char_name
-                ),
+                format!("{}{}.png", png_path.trim_end_matches('\\').to_owned() + "\\", c.char_name),
                 &<u8>::swap_blue_with_red(&c.pixels.bytes),
                 c.pixels.width as u32,
                 c.pixels.height as u32,
@@ -1106,9 +1131,7 @@ impl CharsCollection<u8> {
     }
     /// Sets BGRA for the invisible (/not displayed, Alpha = 0) pixels (which BGRA color matches BGRA_INVISIBLE_PIXEL)
     pub fn set_bgra_for_invisible(&mut self, b: u8, g: u8, r: u8, a: u8) {
-        self.chars
-            .iter_mut()
-            .for_each(|c| c.pixels.set_bgra_for_invisible(b, g, r, a));
+        self.chars.iter_mut().for_each(|c| c.pixels.set_bgra_for_invisible(b, g, r, a));
     }
     /// If a color's Alpha matches, set its BGR values
     pub fn alpha_match_set_bgr(&mut self, a: u8, b: u8, g: u8, r: u8) {
@@ -1126,21 +1149,17 @@ impl CharsCollection<u8> {
 
     /// Set the provided BGR
     pub fn set_bgr(&mut self, b: u8, g: u8, r: u8) {
-        self.chars
-            .iter_mut()
-            .for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
+        self.chars.iter_mut().for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
         self.bgra = BGRA(b, g, r, self.bgra.3);
     }
 
     /// Set the provided BGR
     pub fn set_bgr_from_array(&mut self, bgr: [u8; 3]) {
         let (b, g, r) = (bgr[0], bgr[1], bgr[2]);
-        self.chars
-            .iter_mut()
-            .for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
+        self.chars.iter_mut().for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
         self.bgra = BGRA(b, g, r, self.bgra.3);
     }
-    
+
     pub fn create_pixels_string(&self, string: &str, char_spacing: isize) -> PixelsString {
         let mut vec: Vec<u8> = Vec::new();
         let mut vec_width = 0;
@@ -1234,13 +1253,7 @@ fn find_key_for_value(
     map: &std::collections::HashMap<String, char>,
     value: char,
 ) -> Option<String> {
-    map.iter().find_map(|(key, &val)| {
-        if val == value {
-            Some(key.to_owned())
-        } else {
-            None
-        }
-    })
+    map.iter().find_map(|(key, &val)| if val == value { Some(key.to_owned()) } else { None })
 }
 pub trait CharsHashmap {
     fn get_char_by_char_name_with_default(&self, char_name: &str) -> char;
@@ -1253,6 +1266,7 @@ impl CharsHashmap for std::collections::HashMap<String, char> {
     ///
     /// ```no_run
     /// use std::collections::HashMap;
+    /// use pixel_caster::pixels_string::CharsHashmap;
     ///
     /// let mut chars = HashMap::new();
     ///

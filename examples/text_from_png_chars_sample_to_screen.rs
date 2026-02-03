@@ -1,10 +1,11 @@
 use pixel_caster::bgra_management::bytes_matchers;
 use pixel_caster::{pixels_string::CharsCollection, *};
+
 fn main() {
     // starting from a .png containing a sample of characters
 
     let image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/transparent_green_40px_chars_sample__transparent_background.png",
+        "fonts/transparent_green_40px_chars_sample__transparent_background.png",
     )
     .unwrap();
 
@@ -40,7 +41,7 @@ fn main() {
     }
 
     let image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png",
+        "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
 
@@ -58,9 +59,7 @@ fn main() {
             // create a string and print it on the screen
             let mut string_from_string_png = opaque_grey_scale_chars_white_background
                 .create_pixels_string("testing generated_text!^", 3);
-            string_from_string_png
-                .pixels
-                .set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
+            string_from_string_png.pixels.set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
             Screen::update_area_custom(
                 &string_from_string_png.pixels.bytes,
                 10,
@@ -76,7 +75,7 @@ fn main() {
     }
 
     let mut image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png",
+        "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
     image.bytes = PixelsCollection::white_background_to_transparency_gradient(&image.bytes);
@@ -102,13 +101,13 @@ fn main() {
                 PixelsSendMode::AlphaEnabled,
             );
 
-            transparent_black_chars_transparent_background.export_as_pngs("fonts/exports/from_opaque_grey_scale_12px_chars_sample__white_background/transparent_black__transparent_background").unwrap();
+            transparent_black_chars_transparent_background.export_as_pngs("fonts/from_opaque_grey_scale_12px_chars_sample__white_background/transparent_black__transparent_background").unwrap();
         }
         Err(err) => print!("{}", err),
     }
 
     let mut image = PixelsCollection::<u8>::from_png(
-        "fonts/exports/opaque_grey_scale_12px_chars_sample__white_background.png",
+        "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
     PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
@@ -165,9 +164,7 @@ fn main() {
 
     let mut pixels_string_black_white_background = threshold_black_chars_white_background
         .create_pixels_string("black test text with white background !", 1);
-    pixels_string_black_white_background
-        .pixels
-        .set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
+    pixels_string_black_white_background.pixels.set_bgra_for_invisible(255, 255, 255, 255); // make also the spaces between the chars white
 
     crate::Screen::update_area_custom(
         &pixels_string_black_white_background.pixels.bytes,

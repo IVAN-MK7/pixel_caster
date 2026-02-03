@@ -1,27 +1,25 @@
 #![allow(clippy::too_many_arguments)]
 
-// https://github.com/microsoft/windows-rs
-extern crate libc;
-extern crate windows;
-#[macro_use]
-pub mod macros;
-
-pub use libc::c_void;
 use windows::Win32::{
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/
     Graphics::Gdi::{
-        AlphaBlend, CreateBitmap, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC,
-        DeleteObject, GetBitmapBits, GetDC, ReleaseDC, SelectObject, TransparentBlt, AC_SRC_ALPHA,
-        AC_SRC_OVER, BLENDFUNCTION, HBITMAP, HDC,
+        AC_SRC_ALPHA, AC_SRC_OVER, AlphaBlend, BLENDFUNCTION, CreateBitmap, CreateCompatibleBitmap,
+        CreateCompatibleDC, DeleteDC, DeleteObject, GetBitmapBits, GetDC, HBITMAP, HDC, ReleaseDC,
+        SelectObject, TransparentBlt,
     },
 };
+
+pub use libc::c_void;
+
+pub use crate::pixels::{BGRA_INVISIBLE_PIXEL, PixelValues, PixelsCollection};
+
 mod bitblock_transfer;
-pub mod legacy;
 
-pub mod pixels;
-pub use crate::pixels::{PixelValues, PixelsCollection, BGRA_INVISIBLE_PIXEL};
-
+#[macro_use]
+pub mod macros;
 pub mod bgra_management;
+pub mod legacy;
+pub mod pixels;
 
 #[cfg(feature = "pixels_string")]
 pub mod pixels_string;
@@ -174,6 +172,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// # Examples
     ///
     /// ```no_run
+    /// use pixel_caster::{PixelValues, Screen};
+    ///
     /// let screen_area_upperleftcorner_x = 100;
     /// let screen_area_upperleftcorner_y = 100;
     /// let area_width = 200;
@@ -191,7 +191,6 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// screen.scan_area_onto_vec(&mut vec_u8_pre_populated).unwrap();
     /// ```
     pub fn scan_area_onto_vec(&self, vec: &mut Vec<T>) -> Result<(), String> {
-        //if std::any::TypeId::of::<T>() == std::any::TypeId::of::<u32>() {
         if vec.len()
             != (self.screen_area.width * self.screen_area.height * <T>::units_per_pixel() as u32)
                 as usize
@@ -214,25 +213,26 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
     /// # Examples
     ///
     /// ```no_run
+    /// use pixel_caster::{PixelValues, Screen};
+    ///
     /// let screen_area_to_capture_upperleftcorner_x = 80;
     /// let screen_area_to_capture_upperleftcorner_y = 2;
     /// let area_width = 4;
     /// let area_height = 1;
     ///
     /// // the provided Vec must already have the necessary length to host the values.
-    /// // Which can be obtained either by manually setting its length :
-    /// let mut vec_u8_size_set = Vec::<u8>::with_capacity((area_width * area_height * <u8>::units_per_pixel() as u32) as usize);
-    /// unsafe { vec_u8_size_set.set_len(vec_u8_size_set.capacity()); }
+    /// // Which can be obtained by manually setting its length with:
+    /// let mut vec_u8 = Vec::<u8>::with_capacity((area_width * area_height * <u8>::units_per_pixel() as u32) as usize);
+    /// unsafe { vec_u8.set_len(vec_u8.capacity()); }
     ///
-    /// // or by pre populating it with the needed number of values to reach the needed size :
-    /// let mut vec_u8_pre_populated = vec![0 as u8; (area_width * area_height * <u8>::units_per_pixel() as u32) as usize];
-    /// Screen::get_bytes_onto_vec(
-    ///     &mut vec_u8_pre_populated,
+    /// Screen::scan_area_custom(
+    ///     &mut vec_u8,
     ///     screen_area_to_capture_upperleftcorner_x,
     ///     screen_area_to_capture_upperleftcorner_y,
     ///     area_width,
-    ///     area_height
-    /// ).unwrap();
+    ///     area_height,
+    /// )
+    /// .unwrap();
     /// ```
     pub fn scan_area_custom(
         vec: &mut Vec<T>,
@@ -241,7 +241,6 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
         area_width: u32,
         area_height: u32,
     ) -> Result<(), String> {
-        //if std::any::TypeId::of::<T>() == std::any::TypeId::of::<u32>() {
         if vec.len() != (area_width * area_height * <T>::units_per_pixel() as u32) as usize {
             return Err("Provided Vec has not the correct length".to_string());
         }

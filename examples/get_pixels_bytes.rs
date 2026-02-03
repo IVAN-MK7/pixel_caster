@@ -10,10 +10,23 @@ fn main() {
     let mut screen_u8: Screen<u8> = Screen::new(80, 2, 4, 1);
     screen_u8.scan_area();
 
-    println!("Each pixel's color is obtained by its BGRA values combination, in a Vector of u8 those 4 values occupy 1 position each, in a Vector of u32 those 4 values occupy together just one position.");
-    println!("To contain the BGRA (Blue, Green, Red, Alpha) values of a single pixel a Vec<u8> would have a lenght of 4, a Vec<u32> would have a lenght of just 1");
-    println!("The provided screen area (starting at X: {}, Y: {}) has a width of: {}px and a height of: {}px, for a total pixel count of {}", screen_area_to_capture_upperleftcorner_x, screen_area_to_capture_upperleftcorner_y, pixels_width, pixels_height, pixels_width * pixels_height);
-    println!("The BGRA values of the given screen area have been retrieved both into a Vec<u8> and a Vec<u32>");
+    println!(
+        "Each pixel's color is obtained by its BGRA values combination, in a Vector of u8 those 4 values occupy 1 position each, in a Vector of u32 those 4 values occupy together just one position."
+    );
+    println!(
+        "To contain the BGRA (Blue, Green, Red, Alpha) values of a single pixel a Vec<u8> would have a lenght of 4, a Vec<u32> would have a lenght of just 1"
+    );
+    println!(
+        "The provided screen area (starting at X: {}, Y: {}) has a width of: {}px and a height of: {}px, for a total pixel count of {}",
+        screen_area_to_capture_upperleftcorner_x,
+        screen_area_to_capture_upperleftcorner_y,
+        pixels_width,
+        pixels_height,
+        pixels_width * pixels_height
+    );
+    println!(
+        "The BGRA values of the given screen area have been retrieved both into a Vec<u8> and a Vec<u32>"
+    );
     println!(
         "screen_u8.bytes: first value: {}, length: {}",
         screen_u8.get_bytes()[0],
@@ -53,11 +66,7 @@ fn main() {
         pixels_height as u32,
     )
     .unwrap();
-    println!(
-        "Vec<u8>: first value: {}, length: {}",
-        vec_u8[0],
-        vec_u8.len()
-    );
+    println!("Vec<u8>: first value: {}, length: {}", vec_u8[0], vec_u8.len());
     println!(
         "Vec<u8>: first pixel's values: B:{} G:{} R:{} A:{}",
         vec_u8[0], vec_u8[1], vec_u8[2], vec_u8[3]

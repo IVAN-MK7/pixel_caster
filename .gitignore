@@ -1,4 +1,4 @@
 /target
 /.vscode
-Cargo.lock
-/_rust-toolchain.toml
+/fonts/exports
+/media/exports

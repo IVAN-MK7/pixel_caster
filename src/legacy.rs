@@ -1,13 +1,13 @@
 // Down here are the legacy functions
 
-use crate::{bitblock_transfer, PixelValues};
+use crate::{PixelValues, bitblock_transfer};
 pub use libc::c_void;
 use windows::Win32::{
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/
     Graphics::Gdi::{
-        AlphaBlend, CreateBitmap, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC,
-        DeleteObject, GetBitmapBits, GetDC, ReleaseDC, SelectObject, TransparentBlt, AC_SRC_ALPHA,
-        AC_SRC_OVER, BLENDFUNCTION,
+        AC_SRC_ALPHA, AC_SRC_OVER, AlphaBlend, BLENDFUNCTION, CreateBitmap, CreateCompatibleBitmap,
+        CreateCompatibleDC, DeleteDC, DeleteObject, GetBitmapBits, GetDC, ReleaseDC, SelectObject,
+        TransparentBlt,
     },
 };
 

@@ -34,7 +34,9 @@ fn main() {
         PixelsSendMode::AlphaDisabled,
     );
 
-    println!("\r\nA Vec<u8> containing 64 bytes, representing a qube of 4 x 4 (16) pixels, where the first 2 are red, the other 14 blue, will now be sent to the screen at the location :");
+    println!(
+        "\r\nA Vec<u8> containing 64 bytes, representing a qube of 4 x 4 (16) pixels, where the first 2 are red, the other 14 blue, will now be sent to the screen at the location :"
+    );
     println!(
         "X : {}, Y : {}",
         screen_destination_area_upperleftcorner_x, screen_destination_area_upperleftcorner_y

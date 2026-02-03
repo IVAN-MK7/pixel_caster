@@ -1,4 +1,4 @@
-use crate::{pixels_string::BGRA, PixelValues};
+use crate::{PixelValues, pixels_string::BGRA};
 
 pub trait ColorAlteration<T: PixelValues<T>> {
     /// Set BGR to the provided values
@@ -178,6 +178,8 @@ impl ColorAlteration<u8> for Vec<u8> {
     /// # Examples
     ///
     /// ```no_run
+    /// use pixel_caster::bgra_management::ColorAlteration;
+    ///
     /// let mut vec = vec![255,255,255,255, 100,0,200,255, 0,255,0,100];
     /// // In the vec there are values for the colors of 3 pixels (each has its BGRA combinations of 4 values) those which have an Alpha of 255
     /// // will have their Blue and Alpha values set to 255, the Green and Red values set to 0, in order to change their color to fully opaque Blue (255,0,0,255).
@@ -211,6 +213,8 @@ impl ColorAlteration<u8> for Vec<u8> {
     /// # Examples
     ///
     /// ```no_run
+    /// use pixel_caster::{PixelValues, Screen, bgra_management::ColorAlteration};
+    ///
     /// let mut vec = vec![255,255,255,255, 100,0,200,255, 0,255,0,100];
     /// // In the vec there are values for the colors of 3 pixels (each has its BGRA combinations of 4 values) those which have a BGRA combination that corresponds to fully opaque white (B,G,R,A = 255)
     /// // will have their Blue and Green values set to 0, in order to change their color to fully opaque Red (0,0,255,255). In this case the one that will be changed is the first BGRA combination of the vec
@@ -334,7 +338,7 @@ pub trait SwitchBytes<T: crate::PixelValues<T>, U: crate::PixelValues<U>> {
 impl SwitchBytes<u8, u32> for u8 {
     /// Switches values of 2 provided indexes of every 4 8-bytes chunks ((u8 \[B,G,R,A\]) B: u8, G: u8, R:u8, A :u8 values chunks) in the vector, i1 and i2 must be between 0 and 3 (B:0, G:1, R:2, A:3).
     fn switch_bytes(vec: &mut Vec<u8>, i1: usize, i2: usize) {
-        if i1 > 3 || i2 > 3 || i1 == i2 || vec.len() % 4 != 0 {
+        if i1 > 3 || i2 > 3 || i1 == i2 || !vec.len().is_multiple_of(4) {
             return;
         }
         let mut i = 0;
@@ -354,12 +358,7 @@ impl SwitchBytes<u8, u32> for u8 {
         let mut i = 0;
         for _ in 0..vec.len() / 4 {
             // native endian is little endian in my case (Intel CPU)
-            vec_u32.extend([u32::from_ne_bytes([
-                vec[i],
-                vec[i + 1],
-                vec[i + 2],
-                vec[i + 3],
-            ])]);
+            vec_u32.extend([u32::from_ne_bytes([vec[i], vec[i + 1], vec[i + 2], vec[i + 3]])]);
             i += 4;
         }
         vec_u32
@@ -497,18 +496,20 @@ pub fn u32_bytes_oredered_indexes_and_fullvalues() -> ([usize; 4], [u32; 4]) {
         v3_full_val = 0x0000_FF00;
         v4_full_val = 0x0000_00FF;
     }
-    (
-        [v1_index, v2_index, v3_index, v4_index],
-        [v1_full_val, v2_full_val, v3_full_val, v4_full_val],
-    )
+    ([v1_index, v2_index, v3_index, v4_index], [v1_full_val, v2_full_val, v3_full_val, v4_full_val])
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{bgra_management::*, PixelsCollection, PixelsSendMode, Screen};
+    use crate::{
+        PixelsCollection, PixelsSendMode, Screen, bgra_management::*,
+        pixels_string::create_dir_recursive,
+    };
 
     #[test]
     fn test_u8_u32_convertion() {
+        create_dir_recursive("media/exports/").unwrap();
+
         let mut bytes_u8_bgra: Vec<u8> = Vec::new();
         //                                B    G  R   A
         //                                blue
@@ -530,7 +531,7 @@ mod tests {
         let mut bytes_u8_rgba_from_u8_bgra = bytes_u8_bgra.clone();
         <u8>::switch_bytes(&mut bytes_u8_rgba_from_u8_bgra, 0, 2);
         image::save_buffer_with_format(
-            format!("{}{}", "media/", "bytes_u8_rgba_from_u8_bgra_export.png"),
+            format!("{}{}", "media/exports/", "bytes_u8_rgba_from_u8_bgra.png"),
             &bytes_u8_rgba_from_u8_bgra,
             (bytes_u8_rgba_from_u8_bgra.len() / 4).try_into().unwrap(),
             1,
@@ -562,7 +563,7 @@ mod tests {
         let bytes_u8_rgba_from_u32_rgba = <u32>::u8_u32_casting(&bytes_u32_rgba_from_u32_bgra);
         // when exporting into .ong we need RGBA values
         image::save_buffer_with_format(
-            format!("{}{}", "media/", "bytes_u8_rgba_from_u32_rgba_export.png"),
+            format!("{}{}", "media/exports/", "bytes_u8_rgba_from_u32_rgba.png"),
             &bytes_u8_rgba_from_u32_rgba,
             (bytes_u8_rgba_from_u32_rgba.len() / 4).try_into().unwrap(),
             1,
@@ -574,6 +575,8 @@ mod tests {
 
     #[test]
     fn test_u8_u32_convertion_png_with_transparency() {
+        create_dir_recursive("media/exports/").unwrap();
+
         let image_u8_bgra = PixelsCollection::<u8>::from_png(
             "media/Logo_MK7_Transparent_Bg_ColorsWithHalfAlpha.png",
         )
@@ -592,7 +595,7 @@ mod tests {
         let mut image_u8_rgba_from_image_u8_bgra = image_u8_bgra_from_image_rgba.clone();
         image_u8_rgba_from_image_u8_bgra.switch_bytes(0, 2);
         image::save_buffer_with_format(
-            format!("{}{}", "media/", "rgba_u8_export.png"),
+            format!("{}{}", "media/exports/", "rgba_u8.png"),
             &image_u8_rgba_from_image_u8_bgra.bytes,
             image_u8_bgra.width.try_into().unwrap(),
             image_u8_bgra.height.try_into().unwrap(),
@@ -627,7 +630,7 @@ mod tests {
         // when exporting into .png we need to go from BGRA to RGBA, so swap the B and R values
         <u8>::switch_bytes(&mut bytes_u8_bgra_from_u32_bgra, 0, 2);
         image::save_buffer_with_format(
-            format!("{}{}", "media/", "bytes_u8_rgba_from_u32_rgba_export.png"),
+            format!("{}{}", "media/exports/", "bytes_u8_rgba_from_u32_rgba_with_transparency.png"),
             &bytes_u8_bgra_from_u32_bgra,
             image_u8_bgra.width.try_into().unwrap(),
             image_u8_bgra.height.try_into().unwrap(),
