@@ -831,7 +831,7 @@ impl CharsHashmap for std::collections::HashMap<String, char> {
     }
 }
 
-static CHARS: LazyLock<HashMap<String, char>> = LazyLock::new(|| {
+pub static CHARS: LazyLock<HashMap<String, char>> = LazyLock::new(|| {
     let mut chars = HashMap::new();
 
     // https://www.charset.org/utf-8
