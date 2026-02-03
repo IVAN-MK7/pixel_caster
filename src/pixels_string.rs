@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 use std::{ffi::OsStr, fs, io, path::Path};
 
 use image;
@@ -8,8 +8,6 @@ use serde::{Deserialize, Serialize};
 use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, bgra_management::*};
 
 mod tests;
-
-pub static CHARS: OnceLock<HashMap<String, char>> = OnceLock::new();
 
 /// added because PixelsCollection was moved to a new module, "pub" in order to make it callable from this module pixels_string::PixelsCollection for backwards compatibility, to remove at version 2.0
 pub use crate::PixelsCollection;
@@ -103,7 +101,7 @@ impl<'a> CharsCollectionCreator<'a> {
             // add this character to the collection
             char_u8_vec.chars.push(PixelsChar {
                 char,
-                char_name: chars().get_char_name_by_char(char).unwrap(),
+                char_name: CHARS.get_char_name_by_char(char).unwrap(),
                 pixels: PixelsCollection::<u8>::create(
                     values.right_x - values.left_x + 1,
                     values.bottom_y - img_visible_range.top_y + 1,
@@ -129,7 +127,7 @@ impl<'a> CharsCollectionCreator<'a> {
 
         char_u8_vec.chars.push(PixelsChar {
             char: ' ',
-            char_name: chars().get_char_name_by_char(' ').unwrap(),
+            char_name: CHARS.get_char_name_by_char(' ').unwrap(),
             pixels: PixelsCollection::<u8>::create(
                 space_char_width as usize,
                 char_u8_vec.chars[0].pixels.height,
@@ -583,7 +581,7 @@ impl CharsCollection<u8> {
                 // get Vec<u8> from .png and load it to a .png format, png works in RGBA, to make it usable it will be converted into BGRA
                 match PixelsChar::from_png(
                     &fpath,
-                    chars().get_char_by_char_name_with_default(&fname_without_extension),
+                    CHARS.get_char_by_char_name_with_default(&fname_without_extension),
                     &fname_without_extension,
                 ) {
                     Ok(mut pixels_char) => {
@@ -833,77 +831,75 @@ impl CharsHashmap for std::collections::HashMap<String, char> {
     }
 }
 
-pub fn chars() -> &'static HashMap<String, char> {
-    CHARS.get_or_init(|| {
-        let mut chars = HashMap::new();
+static CHARS: LazyLock<HashMap<String, char>> = LazyLock::new(|| {
+    let mut chars = HashMap::new();
 
-        // https://www.charset.org/utf-8
-        // https://www.utf8-chartable.de/
-        for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars() {
-            chars.insert("LATIN CAPITAL LETTER ".to_string() + &c.to_string(), c);
-            chars.insert(
-                "LATIN SMALL LETTER ".to_string() + &c.to_string(),
-                c.to_lowercase().collect::<Vec<_>>()[0],
-            );
-        }
+    // https://www.charset.org/utf-8
+    // https://www.utf8-chartable.de/
+    for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars() {
+        chars.insert("LATIN CAPITAL LETTER ".to_string() + &c.to_string(), c);
+        chars.insert(
+            "LATIN SMALL LETTER ".to_string() + &c.to_string(),
+            c.to_lowercase().collect::<Vec<_>>()[0],
+        );
+    }
 
-        chars.insert("DIGIT ZERO".to_string(), '0');
-        chars.insert("DIGIT ONE".to_string(), '1');
-        chars.insert("DIGIT TWO".to_string(), '2');
-        chars.insert("DIGIT THREE".to_string(), '3');
-        chars.insert("DIGIT FOUR".to_string(), '4');
-        chars.insert("DIGIT FIVE".to_string(), '5');
-        chars.insert("DIGIT SIX".to_string(), '6');
-        chars.insert("DIGIT SEVEN".to_string(), '7');
-        chars.insert("DIGIT EIGHT".to_string(), '8');
-        chars.insert("DIGIT NINE".to_string(), '9');
+    chars.insert("DIGIT ZERO".to_string(), '0');
+    chars.insert("DIGIT ONE".to_string(), '1');
+    chars.insert("DIGIT TWO".to_string(), '2');
+    chars.insert("DIGIT THREE".to_string(), '3');
+    chars.insert("DIGIT FOUR".to_string(), '4');
+    chars.insert("DIGIT FIVE".to_string(), '5');
+    chars.insert("DIGIT SIX".to_string(), '6');
+    chars.insert("DIGIT SEVEN".to_string(), '7');
+    chars.insert("DIGIT EIGHT".to_string(), '8');
+    chars.insert("DIGIT NINE".to_string(), '9');
 
-        chars.insert("AMPERSAND".to_string(), '&');
-        chars.insert("CIRCUMFLEX ACCENT".to_string(), '^');
-        chars.insert("ASTERISK".to_string(), '*');
-        chars.insert("REVERSE SOLIDUS".to_string(), '\\');
-        chars.insert("VERTICAL LINE".to_string(), '|');
-        chars.insert("LEFT CURLY BRACKET".to_string(), '{');
-        chars.insert("RIGHT CURLY BRACKET".to_string(), '}');
-        chars.insert("LEFT SQUARE BRACKET".to_string(), '[');
-        chars.insert("RIGHT SQUARE BRACKET".to_string(), ']');
-        chars.insert("COLON".to_string(), ':');
-        chars.insert("COMMA".to_string(), ',');
-        chars.insert("DEGREE SIGN".to_string(), '°');
-        chars.insert("DIVISION SIGN".to_string(), '÷');
-        chars.insert("EQUALS SIGN".to_string(), '=');
-        chars.insert("PERCENT SIGN".to_string(), '%');
-        chars.insert("EXCLAMATION MARK".to_string(), '!');
-        chars.insert("GREATER-THAN SIGN".to_string(), '>');
-        chars.insert("LESS-THAN SIGN".to_string(), '<');
-        chars.insert("HYPHEN-MINUS".to_string(), '-');
-        chars.insert("LEFT PARENTHESIS".to_string(), '(');
-        chars.insert("RIGHT PARENTHESIS".to_string(), ')');
-        chars.insert("AMPERSAND".to_string(), '&');
-        chars.insert("FULL STOP".to_string(), '.');
-        chars.insert("PLUS SIGN".to_string(), '+');
-        chars.insert("QUESTION MARK".to_string(), '?');
-        chars.insert("QUOTATION MARK".to_string(), '"');
-        chars.insert("APOSTROPHE".to_string(), '\'');
-        chars.insert("SEMICOLON".to_string(), ';');
-        chars.insert("SOLIDUS".to_string(), '/');
-        chars.insert("SPACE".to_string(), ' ');
-        chars.insert("LOW LINE".to_string(), '_');
-        chars.insert("COMMERCIAL AT".to_string(), '@');
-        chars.insert("NUMBER SIGN".to_string(), '#');
-        chars.insert("POUND SIGN".to_string(), '£');
-        chars.insert("DOLLAR SIGN".to_string(), '$');
-        chars.insert("EURO SIGN".to_string(), '€');
+    chars.insert("AMPERSAND".to_string(), '&');
+    chars.insert("CIRCUMFLEX ACCENT".to_string(), '^');
+    chars.insert("ASTERISK".to_string(), '*');
+    chars.insert("REVERSE SOLIDUS".to_string(), '\\');
+    chars.insert("VERTICAL LINE".to_string(), '|');
+    chars.insert("LEFT CURLY BRACKET".to_string(), '{');
+    chars.insert("RIGHT CURLY BRACKET".to_string(), '}');
+    chars.insert("LEFT SQUARE BRACKET".to_string(), '[');
+    chars.insert("RIGHT SQUARE BRACKET".to_string(), ']');
+    chars.insert("COLON".to_string(), ':');
+    chars.insert("COMMA".to_string(), ',');
+    chars.insert("DEGREE SIGN".to_string(), '°');
+    chars.insert("DIVISION SIGN".to_string(), '÷');
+    chars.insert("EQUALS SIGN".to_string(), '=');
+    chars.insert("PERCENT SIGN".to_string(), '%');
+    chars.insert("EXCLAMATION MARK".to_string(), '!');
+    chars.insert("GREATER-THAN SIGN".to_string(), '>');
+    chars.insert("LESS-THAN SIGN".to_string(), '<');
+    chars.insert("HYPHEN-MINUS".to_string(), '-');
+    chars.insert("LEFT PARENTHESIS".to_string(), '(');
+    chars.insert("RIGHT PARENTHESIS".to_string(), ')');
+    chars.insert("AMPERSAND".to_string(), '&');
+    chars.insert("FULL STOP".to_string(), '.');
+    chars.insert("PLUS SIGN".to_string(), '+');
+    chars.insert("QUESTION MARK".to_string(), '?');
+    chars.insert("QUOTATION MARK".to_string(), '"');
+    chars.insert("APOSTROPHE".to_string(), '\'');
+    chars.insert("SEMICOLON".to_string(), ';');
+    chars.insert("SOLIDUS".to_string(), '/');
+    chars.insert("SPACE".to_string(), ' ');
+    chars.insert("LOW LINE".to_string(), '_');
+    chars.insert("COMMERCIAL AT".to_string(), '@');
+    chars.insert("NUMBER SIGN".to_string(), '#');
+    chars.insert("POUND SIGN".to_string(), '£');
+    chars.insert("DOLLAR SIGN".to_string(), '$');
+    chars.insert("EURO SIGN".to_string(), '€');
 
-        chars
-    })
-}
+    chars
+});
 
 #[test]
 fn hashmap_test() {
-    assert_eq!(find_key_for_value(chars(), 'a'), Some("LATIN SMALL LETTER A".to_string()));
-    assert_eq!(find_key_for_value(chars(), 'A'), Some("LATIN CAPITAL LETTER A".to_string()));
+    assert_eq!(find_key_for_value(&CHARS, 'a'), Some("LATIN SMALL LETTER A".to_string()));
+    assert_eq!(find_key_for_value(&CHARS, 'A'), Some("LATIN CAPITAL LETTER A".to_string()));
 
-    assert_eq!(chars().get_char_by_char_name_with_default("DIGIT ZERO"), '0');
-    assert_eq!(chars().get_char_by_char_name_with_default("banana"), '█');
+    assert_eq!(CHARS.get_char_by_char_name_with_default("DIGIT ZERO"), '0');
+    assert_eq!(CHARS.get_char_by_char_name_with_default("banana"), '█');
 }
