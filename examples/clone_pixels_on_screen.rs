@@ -1,4 +1,4 @@
-pub use pixel_caster::*;
+use pixel_caster::Screen;
 
 fn main() {
     let screen_area_to_capture_upperleftcorner_x = 60;

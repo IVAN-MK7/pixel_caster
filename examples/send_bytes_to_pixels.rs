@@ -1,4 +1,4 @@
-pub use pixel_caster::*;
+use pixel_caster::{PixelsSendMode, Screen};
 
 fn main() {
     let screen_destination_area_upperleftcorner_x = 30;

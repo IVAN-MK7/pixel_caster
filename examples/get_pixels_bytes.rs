@@ -1,4 +1,4 @@
-pub use pixel_caster::{bgra_management::SwitchBytes, *};
+use pixel_caster::{PixelValues, Screen, bgra_management::SwitchBytes};
 
 fn main() {
     let screen_area_to_capture_upperleftcorner_x = 80;

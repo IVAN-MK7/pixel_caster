@@ -1,5 +1,6 @@
 use pixel_caster::bgra_management::bytes_matchers;
-use pixel_caster::{pixels_string::CharsCollection, *};
+use pixel_caster::pixels_string::CharsCollection;
+use pixel_caster::{PixelsCollection, PixelsSendMode, Screen};
 
 fn main() {
     // starting from a .png containing a sample of characters

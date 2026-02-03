@@ -111,7 +111,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             let screen = GetDC(None);
             WindowsApiScreen {
                 screen,
-                dc_screen: CreateCompatibleDC(screen),
+                dc_screen: CreateCompatibleDC(Some(screen)),
                 captured_hbmp: CreateCompatibleBitmap(
                     screen,
                     area_width as i32,
@@ -405,7 +405,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // https://stackoverflow.com/questions/31759582/assign-an-array-to-mut-c-void
                 Some(vec.as_ptr() as *mut c_void), //&vec as *const Vec<u8> as *mut c_void
             );
-            let hbmp_replace = SelectObject(win_api_screen.dc_screen, hbmp_from_bytes);
+            let hbmp_replace = SelectObject(win_api_screen.dc_screen, hbmp_from_bytes.into());
 
             // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-blendfunction
             let bf = BLENDFUNCTION {
@@ -446,8 +446,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
                 DeleteDC(win_api_screen.dc_screen).unwrap();
-                DeleteObject(win_api_screen.captured_hbmp).unwrap();
-                DeleteObject(hbmp_from_bytes).unwrap();
+                DeleteObject(win_api_screen.captured_hbmp.into()).unwrap();
+                DeleteObject(hbmp_from_bytes.into()).unwrap();
             }
         }
     }
@@ -493,7 +493,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             //let dc_src = CreateCompatibleDC(None);
 
             //let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes);
-            let hbmp_replace = SelectObject(win_api_screen.dc_screen, hbmp_from_bytes);
+            let hbmp_replace = SelectObject(win_api_screen.dc_screen, hbmp_from_bytes.into());
 
             // get a handle (H) to a device context (DC) for the client area,
             // in this case for the entire virtual screen (not just a monitor),
@@ -530,8 +530,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
                 let _ = DeleteDC(win_api_screen.dc_screen);
-                let _ = DeleteObject(win_api_screen.captured_hbmp);
-                let _ = DeleteObject(hbmp_from_bytes);
+                let _ = DeleteObject(win_api_screen.captured_hbmp.into());
+                let _ = DeleteObject(hbmp_from_bytes.into());
             }
         }
     }
@@ -582,7 +582,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             //let dc_src = CreateCompatibleDC(None);
 
             //let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes);
-            let hbmp_replace = SelectObject(win_api_screen.dc_screen, hbmp_from_bytes);
+            let hbmp_replace = SelectObject(win_api_screen.dc_screen, hbmp_from_bytes.into());
 
             // get a handle (H) to a device context (DC) for the client area,
             // in this case for the entire virtual screen (not just a monitor),
@@ -656,8 +656,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
                 DeleteDC(win_api_screen.dc_screen).unwrap();
-                DeleteObject(win_api_screen.captured_hbmp).unwrap();
-                DeleteObject(hbmp_from_bytes).unwrap();
+                DeleteObject(win_api_screen.captured_hbmp.into()).unwrap();
+                DeleteObject(hbmp_from_bytes.into()).unwrap();
             }
         }
     }
@@ -673,7 +673,8 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
         win_api_screen: &WindowsApiScreen,
     ) {
         unsafe {
-            let hbmp_replace = SelectObject(win_api_screen.dc_screen, win_api_screen.captured_hbmp);
+            let hbmp_replace =
+                SelectObject(win_api_screen.dc_screen, win_api_screen.captured_hbmp.into());
 
             bitblock_transfer::bit_block_transfer(
                 win_api_screen.dc_screen,
@@ -709,7 +710,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
                 // default object after it has finished drawing with the new object.
                 SelectObject(win_api_screen.dc_screen, hbmp_replace);
                 DeleteDC(win_api_screen.dc_screen).unwrap();
-                DeleteObject(win_api_screen.captured_hbmp).unwrap();
+                DeleteObject(win_api_screen.captured_hbmp.into()).unwrap();
             }
         }
     }
@@ -732,13 +733,13 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
 
             // Create a compatible bitmap of the requested pixel area (area_width x area_height px).
             // get a handle (H) of a memory device context (DC) from which capture data (pixels)
-            let captured_screen = CreateCompatibleDC(screen);
+            let captured_screen = CreateCompatibleDC(Some(screen));
 
             // requested pixels' area width and height to be captured
             let captured_hbmp =
                 CreateCompatibleBitmap(screen, area_width as i32, area_height as i32);
 
-            let hbmp_replace = SelectObject(captured_screen, captured_hbmp);
+            let hbmp_replace = SelectObject(captured_screen, captured_hbmp.into());
 
             // get the data of a given area from screen ad set it to captured_screen
             let captured_screen_upperleftcorner_x = 0;
@@ -780,7 +781,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             // default object after it has finished drawing with the new object.
             SelectObject(captured_screen, hbmp_replace);
             DeleteDC(captured_screen).unwrap();
-            DeleteObject(captured_hbmp).unwrap();
+            DeleteObject(captured_hbmp.into()).unwrap();
         }
     }
 }

@@ -1,7 +1,5 @@
 // Down here are the legacy functions
 
-use crate::{PixelValues, bitblock_transfer};
-pub use libc::c_void;
 use windows::Win32::{
     // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/
     Graphics::Gdi::{
@@ -10,6 +8,10 @@ use windows::Win32::{
         TransparentBlt,
     },
 };
+
+use crate::{PixelValues, bitblock_transfer};
+
+pub use libc::c_void;
 
 /// Gets the bytes from the pixels of a screen area of the requested size, starting from an absolute position on the screen.
 /// The bytes are retrieved row by row. Returns a Vec of specified type (u8/u32) ( e.g.: let vec_u8 :Vec<u8> = get_bytes(...) ).
@@ -29,11 +31,11 @@ pub fn get_bytes<T: PixelValues<T>>(
 
         // Create a compatible bitmap of the requested pixel area (area_width x area_height px).
         // get a handle (H) of a memory device context (DC) from which capture data (pixels)
-        let dst_screen = CreateCompatibleDC(screen);
+        let dst_screen = CreateCompatibleDC(Some(screen));
 
         // requested pixels' area width and height to be captured
         let captured_hbmp = CreateCompatibleBitmap(screen, area_width as i32, area_height as i32);
-        let hbmp_replace = SelectObject(dst_screen, captured_hbmp);
+        let hbmp_replace = SelectObject(dst_screen, captured_hbmp.into());
 
         // get the data of a given area from screen ad set it to captured_screen
         let dst_ul_x = 0;
@@ -70,7 +72,7 @@ pub fn get_bytes<T: PixelValues<T>>(
         // default object after it has finished drawing with the new object.
         SelectObject(dst_screen, hbmp_replace);
         DeleteDC(dst_screen).unwrap();
-        DeleteObject(captured_hbmp).unwrap();
+        DeleteObject(captured_hbmp.into()).unwrap();
         vec
     }
 }
@@ -117,7 +119,7 @@ pub fn send_bytes<T: PixelValues<T> + Copy>(
         // get a handle (H) of a memory device context (DC) from which capture data (pixels)
         let dc_src = CreateCompatibleDC(None);
 
-        let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes);
+        let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes.into());
 
         // get a handle (H) to a device context (DC) for the client area,
         // in this case for the entire virtual screen (not just a monitor),
@@ -162,7 +164,7 @@ pub fn send_bytes<T: PixelValues<T> + Copy>(
         // default object after it has finished drawing with the new object.
         SelectObject(dc_src, hbmp_replace);
         DeleteDC(dc_src).unwrap();
-        DeleteObject(hbmp_from_bytes).unwrap();
+        DeleteObject(hbmp_from_bytes.into()).unwrap();
     }
 }
 
@@ -205,7 +207,7 @@ pub fn send_bytes_alpha_disabled<T>(
         // get a handle (H) of a memory device context (DC) from which capture data (pixels)
         let dc_src = CreateCompatibleDC(None);
 
-        let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes);
+        let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes.into());
 
         // get a handle (H) to a device context (DC) for the client area,
         // in this case for the entire virtual screen (not just a monitor),
@@ -238,7 +240,7 @@ pub fn send_bytes_alpha_disabled<T>(
         // default object after it has finished drawing with the new object.
         SelectObject(dc_src, hbmp_replace);
         DeleteDC(dc_src).unwrap();
-        DeleteObject(hbmp_from_bytes).unwrap();
+        DeleteObject(hbmp_from_bytes.into()).unwrap();
     }
 }
 
@@ -286,7 +288,7 @@ pub fn send_bytes_alpha_disabled_hide_specific_bgr<T>(
         // get a handle (H) of a memory device context (DC) from which capture data (pixels)
         let dc_src = CreateCompatibleDC(None);
 
-        let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes);
+        let hbmp_replace = SelectObject(dc_src, hbmp_from_bytes.into());
 
         // get a handle (H) to a device context (DC) for the client area,
         // in this case for the entire virtual screen (not just a monitor),
@@ -356,6 +358,6 @@ pub fn send_bytes_alpha_disabled_hide_specific_bgr<T>(
         // default object after it has finished drawing with the new object.
         SelectObject(dc_src, hbmp_replace);
         DeleteDC(dc_src).unwrap();
-        DeleteObject(hbmp_from_bytes).unwrap();
+        DeleteObject(hbmp_from_bytes.into()).unwrap();
     }
 }

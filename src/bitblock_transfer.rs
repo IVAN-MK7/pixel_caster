@@ -30,7 +30,7 @@ pub fn bit_block_transfer(
             // The height, in logical units, of the source and the destination rectangles
             area_height as i32,
             // A handle to the source device context
-            src,
+            Some(src),
             // The x-coordinate, in logical units, of the upper-left corner of the source rectangle
             src_ulc_x,
             // The y-coordinate, in logical units, of the upper-left corner of the source rectangle

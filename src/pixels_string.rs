@@ -1,11 +1,13 @@
+use std::{ffi::OsStr, fs, io, path::Path};
+
 use image;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-use std::{ffi::OsStr, fs, io, path::Path};
+
+use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, bgra_management::*};
 
 /// added because PixelsCollection was moved to a new module, "pub" in order to make it callable from this module pixels_string::PixelsCollection for backwards compatibility, to remove at version 2.0
 pub use crate::PixelsCollection;
-use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, bgra_management::*};
 
 pub struct CharsCollectionCreator<'a> {
     pixels_collection: &'a PixelsCollection<u8>,
@@ -1177,7 +1179,8 @@ impl CharsCollection<u8> {
 
                     // char width + char_spacing (char_spacing can be negative, which will remove columns starting from the last one on the right)
                     //let char_total_width = add_limited!(char.pixels.width as i32, char_spacing, 1);
-                    let char_total_width = add_limited!(char.pixels.width as i32, char_spacing, 0);
+                    let char_total_width =
+                        add_limited!(char.pixels.width as isize, char_spacing, 0);
 
                     // in case this char is not as high as the current row we won't have any more bytes to add
                     // so add the needed rows at the end to make it high as needed
@@ -1190,7 +1193,7 @@ impl CharsCollection<u8> {
                     // start adding bytes to the resulting pixels string's current row
                     for w in 0..char_total_width {
                         // in case the char's current row's bytes have ended, add the necessary bytes to make up the remaining width (made by char_spacing)
-                        if w >= char.pixels.width as i32 {
+                        if w >= char.pixels.width as isize {
                             vec.extend_from_slice(&[0, 0, 0, 0]);
                         }
                         // add the char's current row's bytes to the resulting pixels string
@@ -1214,9 +1217,9 @@ impl CharsCollection<u8> {
                 // in case a char was not found, don't continue to next char, instead put widest_char_width wide matching bgra pixels
                 else {
                     for _ in 0..add_limited!(
-                        widest_char_width as i32,
+                        widest_char_width as isize,
                         char_spacing,
-                        widest_char_width as i32
+                        widest_char_width as isize
                     ) {
                         vec.extend_from_slice(&[self.bgra.0, self.bgra.1, self.bgra.2, 255]);
                     }
@@ -1224,9 +1227,9 @@ impl CharsCollection<u8> {
                     //if string_y == 1 {
                     if string_y == 0 {
                         vec_width += add_limited!(
-                            widest_char_width as i32,
+                            widest_char_width as isize,
                             char_spacing,
-                            widest_char_width as i32
+                            widest_char_width as isize
                         ) as usize;
                     }
                     continue;

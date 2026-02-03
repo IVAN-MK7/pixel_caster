@@ -1,4 +1,5 @@
-use pixel_caster::*;
+use pixel_caster::{PixelsSendMode, Screen};
+
 /// main() will just get and send some bytes to verify that the screen reacts to the new values
 fn main() {
     println!(
