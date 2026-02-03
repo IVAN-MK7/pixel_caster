@@ -25,6 +25,7 @@ pub trait PixelValues<T> {
     /// Returns .units_per_pixel() for the type specified at &self
     fn get_units_per_pixel(&self) -> u8;
 }
+
 impl PixelValues<u8> for u8 {
     fn create_adjusted_vec(vec: &[u8]) -> Vec<u8> {
         let mut vec_adjusted: Vec<u8> = Vec::with_capacity(vec.len());
@@ -71,6 +72,7 @@ impl PixelValues<u8> for u8 {
         4
     }
 }
+
 impl PixelValues<u32> for u32 {
     fn create_adjusted_vec(vec: &[u32]) -> Vec<u32> {
         let mut vec_adjusted: Vec<u32> = Vec::with_capacity(vec.len());
@@ -148,6 +150,7 @@ pub struct PixelsCollection<T: PixelValues<T>> {
     /// How many units of this type of value are necessary to represent a single pixel's color (u8 : 4 (1Blue,1Red,1Green,1Alpha), u32 : 1 (0xAARRGGBB))
     pub units_per_pixel: u8,
 }
+
 impl<T: PixelValues<T>> PixelsCollection<T> {
     /// Creates a new instance that will represent a rectangle with width * height area, filled with the provided color bytes
     pub fn create(
@@ -179,6 +182,7 @@ impl PixelsCollection<u8> {
     pub fn switch_bytes(&mut self, i1: usize, i2: usize) {
         <u8>::switch_bytes(&mut self.bytes, i1, i2);
     }
+
     /// If a BGRA combination is met, set it to a provided BGRA
     pub fn matching_color_change(
         &mut self,
@@ -199,6 +203,7 @@ impl PixelsCollection<u8> {
             new_a,
         );
     }
+
     /// Sets BGRA for the invisible pixels (not displayed, Alpha = 0, which BGRA values match BGRA_INVISIBLE_PIXEL)
     pub fn set_bgra_for_invisible(&mut self, b: u8, g: u8, r: u8, a: u8) {
         self.bytes.color_matcher_and_new_color(
@@ -214,6 +219,7 @@ impl PixelsCollection<u8> {
             a,
         );
     }
+
     /// Sets BGR values for every pixel
     pub fn set_bgr(&mut self, b: u8, g: u8, r: u8) {
         self.bytes.set_bgr(b, g, r);
@@ -246,6 +252,7 @@ impl PixelsCollection<u8> {
             i += 4;
         }
     }
+
     /// Whites become transparent, range from white to lowest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
     pub fn white_background_to_transparency_gradient(vec: &[u8]) -> Vec<u8> {
         let mut vec_adjusted: Vec<u8> = Vec::with_capacity(vec.len());
@@ -314,6 +321,7 @@ impl PixelsCollection<u8> {
         }
         vec_adjusted
     }
+
     /// Blacks become transparent, range from black to highest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
     pub fn black_background_to_transparency_gradient(vec: &[u8]) -> Vec<u8> {
         let mut vec_adjusted: Vec<u8> = Vec::with_capacity(vec.len());
@@ -462,6 +470,7 @@ pub fn dynamic_image_data_to_pixels_collection(
     };
     dynamic_image_to_pixels_collection(image, has_alpha_channel)
 }
+
 /// Note: this function assumes that the provided `image` is already in BGR(A) format,
 /// if it's not switching the Red and Blue bytes with `<u8>::switch_bytes(&mut pixels_collection.bytes, 0, 2)`.
 pub fn dynamic_image_to_pixels_collection(
@@ -487,6 +496,7 @@ pub fn dynamic_image_to_pixels_collection(
 
     Ok(PixelsCollection::<u8>::create(width as usize, height as usize, bgra_bytes).unwrap())
 }
+
 pub fn pixels_collection_to_dynamic_image_data(
     pixels_collection: PixelsCollection<u8>,
     keep_alpha_channel: bool,
