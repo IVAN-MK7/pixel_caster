@@ -216,7 +216,7 @@ impl ColorAlteration<u8> for Vec<u8> {
     /// # Examples
     ///
     /// ```no_run
-    /// use pixel_caster::{PixelValues, Screen, bgra_management::ColorAlteration};
+    /// use pixel_caster::bgra_management::ColorAlteration;
     ///
     /// let mut vec = vec![255,255,255,255, 100,0,200,255, 0,255,0,100];
     /// // In the vec there are values for the colors of 3 pixels (each has its BGRA combinations of 4 values) those which have a BGRA combination that corresponds to fully opaque white (B,G,R,A = 255)

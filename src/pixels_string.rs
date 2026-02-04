@@ -5,7 +5,7 @@ use std::{ffi::OsStr, fs, io, path::Path};
 use image;
 use serde::{Deserialize, Serialize};
 
-use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, bgra_management::*};
+use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, apply_limited_delta, bgra_management::*};
 
 mod tests;
 
@@ -717,9 +717,9 @@ impl CharsCollection<u8> {
                     let char_vec = &char.pixels.bytes;
 
                     // char width + char_spacing (char_spacing can be negative, which will remove columns starting from the last one on the right)
-                    //let char_total_width = add_limited!(char.pixels.width as i32, char_spacing, 1);
+                    //let char_total_width = apply_limited_delta(char.pixels.width as i32, char_spacing, 1);
                     let char_total_width =
-                        add_limited!(char.pixels.width as isize, char_spacing, 0);
+                        apply_limited_delta(char.pixels.width as isize, char_spacing, 0);
 
                     // in case this char is not as high as the current row we won't have any more bytes to add
                     // so add the needed rows at the end to make it high as needed
@@ -755,20 +755,20 @@ impl CharsCollection<u8> {
                 }
                 // in case a char was not found, don't continue to next char, instead put widest_char_width wide matching bgra pixels
                 else {
-                    for _ in 0..add_limited!(
+                    for _ in 0..apply_limited_delta(
                         widest_char_width as isize,
                         char_spacing,
-                        widest_char_width as isize
+                        widest_char_width as isize,
                     ) {
                         vec.extend_from_slice(&[self.bgra.0, self.bgra.1, self.bgra.2, 255]);
                     }
                     // increments resulting pixels string's width with the current char's total width (occurrs once per each char)
                     //if string_y == 1 {
                     if string_y == 0 {
-                        vec_width += add_limited!(
+                        vec_width += apply_limited_delta(
                             widest_char_width as isize,
                             char_spacing,
-                            widest_char_width as isize
+                            widest_char_width as isize,
                         ) as usize;
                     }
                     continue;
