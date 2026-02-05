@@ -5,7 +5,7 @@ use std::{ffi::OsStr, fs, io, path::Path};
 use image;
 use serde::{Deserialize, Serialize};
 
-use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, apply_limited_delta, bgra_management::*};
+use crate::{BGRA_INVISIBLE_PIXEL, PixelValues, bgra_management::*};
 
 mod tests;
 
@@ -717,9 +717,8 @@ impl CharsCollection<u8> {
                     let char_vec = &char.pixels.bytes;
 
                     // char width + char_spacing (char_spacing can be negative, which will remove columns starting from the last one on the right)
-                    //let char_total_width = apply_limited_delta(char.pixels.width as i32, char_spacing, 1);
                     let char_total_width =
-                        apply_limited_delta(char.pixels.width as isize, char_spacing, 0);
+                        (char.pixels.width as isize + char_spacing).max(0) as usize;
 
                     // in case this char is not as high as the current row we won't have any more bytes to add
                     // so add the needed rows at the end to make it high as needed
@@ -732,13 +731,12 @@ impl CharsCollection<u8> {
                     // start adding bytes to the resulting pixels string's current row
                     for w in 0..char_total_width {
                         // in case the char's current row's bytes have ended, add the necessary bytes to make up the remaining width (made by char_spacing)
-                        if w >= char.pixels.width as isize {
+                        if w >= char.pixels.width {
                             vec.extend_from_slice(&[0, 0, 0, 0]);
                         }
                         // add the char's current row's bytes to the resulting pixels string
                         else {
-                            let i =
-                                (char_vec.len() / char.pixels.height) * string_y + (w * 4) as usize;
+                            let i = (char_vec.len() / char.pixels.height) * string_y + (w * 4);
                             vec.extend_from_slice(&[
                                 char_vec[i],
                                 char_vec[i + 1],
@@ -750,26 +748,20 @@ impl CharsCollection<u8> {
                     // increments resulting pixels string's width with the current char's total width (occurrs once per each char)
                     //if string_y == 1 {
                     if string_y == 0 {
-                        vec_width += char_total_width as usize;
+                        vec_width += char_total_width;
                     }
                 }
                 // in case a char was not found, don't continue to next char, instead put widest_char_width wide matching bgra pixels
                 else {
-                    for _ in 0..apply_limited_delta(
-                        widest_char_width as isize,
-                        char_spacing,
-                        widest_char_width as isize,
-                    ) {
+                    let char_total_width =
+                        (widest_char_width as isize + char_spacing).max(0) as usize;
+                    for _ in 0..char_total_width {
                         vec.extend_from_slice(&[self.bgra.0, self.bgra.1, self.bgra.2, 255]);
                     }
                     // increments resulting pixels string's width with the current char's total width (occurrs once per each char)
                     //if string_y == 1 {
                     if string_y == 0 {
-                        vec_width += apply_limited_delta(
-                            widest_char_width as isize,
-                            char_spacing,
-                            widest_char_width as isize,
-                        ) as usize;
+                        vec_width += char_total_width;
                     }
                     continue;
                 }
