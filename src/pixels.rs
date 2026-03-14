@@ -1,3 +1,5 @@
+use std::{borrow::Cow, fmt::Debug};
+
 use image::{DynamicImage, ImageBuffer, Rgb, Rgba};
 use serde::{Deserialize, Serialize};
 
@@ -137,7 +139,7 @@ impl PixelValues<u32> for u32 {
 
 /// Contains pixels' color bytes data, in BGRA format, and info
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PixelsCollection<T: PixelValues<T>> {
+pub struct PixelsCollection<'a, T: PixelValues<T> + Clone> {
     /// Width of the rectangle represented by the color bytes
     pub width: usize,
     /// Height of the rectangle represented by the color bytes
@@ -145,42 +147,60 @@ pub struct PixelsCollection<T: PixelValues<T>> {
     /// Units of color bytes necessary to build a single row of pixels in the rectangle of pixels
     /// To consider "(y * image.width + x) * units_per_pixel()" instead of "image.row_length * y + 4 * x", it removes the need for this field.
     pub row_length: usize,
-    /// Vec of bytes containing pixels' color data
-    pub bytes: Vec<T>,
+
+    /// Can hold either a borrowed &[T] OR an owned Vec<T>.
+    #[serde(borrow)]
+    pub bytes: Cow<'a, [T]>,
+
     /// How many units of this type of value are necessary to represent a single pixel's color (u8 : 4 (1Blue,1Red,1Green,1Alpha), u32 : 1 (0xAARRGGBB))
     pub units_per_pixel: u8,
 }
 
-impl<T: PixelValues<T>> PixelsCollection<T> {
-    /// Creates a new instance that will represent a rectangle with width * height area, filled with the provided color bytes
-    pub fn create(
+impl<'a, T: PixelValues<T> + Clone> Debug for PixelsCollection<'a, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PixelsCollection")
+            .field("width", &self.width)
+            .field("height", &self.height)
+            .field("row_length", &self.row_length)
+            .field("units_per_pixel", &self.units_per_pixel)
+            .finish()
+    }
+}
+
+impl<'a, T: PixelValues<T> + Clone> PixelsCollection<'a, T> {
+    /// Creates a new instance that will represent a rectangle with width * height area.
+    /// Accepts either an owned Vec<T> or a borrowed &[T].
+    pub fn create<B>(
         width: usize,
         height: usize,
-        bytes: Vec<T>,
-    ) -> Result<PixelsCollection<T>, String> {
-        // if bytes.len()%4 != 0
-        if !bytes.len().is_multiple_of(<T>::units_per_pixel() as usize) {
-            return Err("provided Vec<u8>'s length must be divisible by 4, as it takes 4 values (BGRA, in Vec<u8>) to get the resulting color for each pixel".to_string());
+        bytes: B,
+    ) -> Result<PixelsCollection<'a, T>, String>
+    where
+        B: Into<Cow<'a, [T]>>,
+    {
+        let cow_bytes = bytes.into();
+
+        if !cow_bytes.len().is_multiple_of(<T>::units_per_pixel() as usize) {
+            return Err("provided bytes length must be divisible by units_per_pixel".to_string());
         }
-        if bytes.len() != width * height * <T>::units_per_pixel() as usize {
-            return Err(
-                "provided Vec's length does not match width * height of the resulting values area"
-                    .to_string(),
-            );
+
+        if cow_bytes.len() != width * height * <T>::units_per_pixel() as usize {
+            return Err("provided bytes length does not match width * height".to_string());
         }
+
         Ok(PixelsCollection {
             width,
             height,
-            row_length: ((width * height * <T>::units_per_pixel() as usize) / height),
-            bytes,
+            row_length: width * <T>::units_per_pixel() as usize,
+            bytes: cow_bytes,
             units_per_pixel: <T>::units_per_pixel(),
         })
     }
 }
 
-impl PixelsCollection<u8> {
+impl<'a> PixelsCollection<'a, u8> {
     pub fn switch_bytes(&mut self, i1: usize, i2: usize) {
-        <u8>::switch_bytes(&mut self.bytes, i1, i2);
+        <u8>::switch_bytes(self.bytes.to_mut(), i1, i2);
     }
 
     /// If a BGRA combination is met, set it to a provided BGRA
@@ -195,7 +215,7 @@ impl PixelsCollection<u8> {
         new_r: u8,
         new_a: u8,
     ) {
-        self.bytes.color_matcher_and_new_color(
+        self.bytes.to_mut().color_matcher_and_new_color(
             |v0: u8, v1: u8, v2: u8, v3: u8| -> bool { v0 == b && v1 == g && v2 == r && v3 == a },
             new_b,
             new_g,
@@ -206,7 +226,7 @@ impl PixelsCollection<u8> {
 
     /// Sets BGRA for the invisible pixels (not displayed, Alpha = 0, which BGRA values match BGRA_INVISIBLE_PIXEL)
     pub fn set_bgra_for_invisible(&mut self, b: u8, g: u8, r: u8, a: u8) {
-        self.bytes.color_matcher_and_new_color(
+        self.bytes.to_mut().color_matcher_and_new_color(
             |v0: u8, v1: u8, v2: u8, v3: u8| -> bool {
                 v0 == BGRA_INVISIBLE_PIXEL.0
                     && v1 == BGRA_INVISIBLE_PIXEL.1
@@ -222,7 +242,7 @@ impl PixelsCollection<u8> {
 
     /// Sets BGR values for every pixel
     pub fn set_bgr(&mut self, b: u8, g: u8, r: u8) {
-        self.bytes.set_bgr(b, g, r);
+        self.bytes.to_mut().set_bgr(b, g, r);
     }
 
     /// If a BGR combination of any grey (equal B,G,R make shades of grey) is met and their value exceed the given threshold,
@@ -254,7 +274,7 @@ impl PixelsCollection<u8> {
     }
 
     /// Whites become transparent, range from white to lowest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
-    pub fn white_background_to_transparency_gradient(vec: &[u8]) -> Vec<u8> {
+    pub fn white_background_to_transparency_gradient(vec: &[u8]) -> Cow<'a, [u8]> {
         let mut vec_adjusted: Vec<u8> = Vec::with_capacity(vec.len());
 
         let mut j = 0;
@@ -319,7 +339,7 @@ impl PixelsCollection<u8> {
 
             i += 4;
         }
-        vec_adjusted
+        vec_adjusted.into()
     }
 
     /// Blacks become transparent, range from black to highest BGR will get a proportionate Alpha value. Where Alpha < 255 no changes will be made (the values of colors with transparency won't be alterated)
@@ -392,16 +412,22 @@ impl PixelsCollection<u8> {
     }
 
     /// Returns a new PixelsCollection from the provided one, scaling based on the provided ResizeSize (either width or hight)
-    pub fn create_new_resized(&self, resize_size: ResizeSize) -> PixelsCollection<u8> {
+    pub fn create_new_resized(&self, resize_size: ResizeSize) -> PixelsCollection<'a, u8> {
         let new_height;
         let new_width;
 
         match resize_size {
             ResizeSize::Width(w) => {
+                if self.width == w {
+                    return self.clone();
+                }
                 new_width = w;
                 new_height = (new_width * self.height) / self.width;
             }
             ResizeSize::Height(h) => {
+                if self.height == h {
+                    return self.clone();
+                }
                 new_height = h;
                 new_width = (new_height * self.width) / self.height;
             }
@@ -426,13 +452,15 @@ impl PixelsCollection<u8> {
     }
 }
 
-impl<T: PixelValues<T>> PixelsCollection<T> {
+impl<'a, T: PixelValues<T> + Clone> PixelsCollection<'a, T> {
+    #[inline(always)]
     pub fn coord_to_index(&self, x: usize, y: usize) -> usize {
-        (self.width * y + x) * (self.units_per_pixel as usize)
+        y * self.row_length + x * (self.units_per_pixel as usize)
     }
 
     /// From the given `x` `y` coordinate on its `bytes`' image, applies the provided offset values
     /// and returns the resulting coordinate's index.
+    #[inline]
     pub fn coord_to_index_with_offset_coord(
         &self,
         x: usize,
@@ -440,8 +468,16 @@ impl<T: PixelValues<T>> PixelsCollection<T> {
         offset_x: isize,
         offset_y: isize,
     ) -> usize {
-        ((self.width as isize * (y as isize + offset_y) + (x as isize + offset_x))
-            * (self.units_per_pixel as isize)) as usize
+        let base_index = (y * self.row_length) + (x * self.units_per_pixel as usize);
+        let offset_index =
+            (offset_y * self.row_length as isize) + (offset_x * self.units_per_pixel as isize);
+
+        (base_index as isize + offset_index) as usize
+    }
+
+    #[inline]
+    pub fn get_linear_offset(&self, offset_x: isize, offset_y: isize) -> isize {
+        (offset_y * self.width as isize + offset_x) * self.units_per_pixel as isize
     }
 }
 
@@ -451,9 +487,9 @@ pub enum ResizeSize {
     Height(usize),
 }
 
-impl PixelsCollection<u32> {
+impl<'a> PixelsCollection<'a, u32> {
     pub fn switch_bytes(&mut self, i1: usize, i2: usize) {
-        <u32>::switch_bytes(&mut self.bytes, i1, i2);
+        <u32>::switch_bytes(self.bytes.to_mut(), i1, i2);
     }
 }
 
@@ -462,7 +498,7 @@ impl PixelsCollection<u32> {
 pub fn dynamic_image_data_to_pixels_collection(
     image_data: Vec<u8>,
     has_alpha_channel: bool,
-) -> Result<PixelsCollection<u8>, String> {
+) -> Result<PixelsCollection<'static, u8>, String> {
     // Load the image from the png data
     let image = match image::load_from_memory(&image_data) {
         Ok(img) => img,
@@ -476,7 +512,7 @@ pub fn dynamic_image_data_to_pixels_collection(
 pub fn dynamic_image_to_pixels_collection(
     image: DynamicImage,
     has_alpha_channel: bool,
-) -> Result<PixelsCollection<u8>, String> {
+) -> Result<PixelsCollection<'static, u8>, String> {
     // Convert the image to BGR(A)
     let (bgra_bytes, width, height) = if has_alpha_channel {
         let bgr_image = image.to_rgba8();

@@ -111,7 +111,7 @@ fn main() {
         "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
-    PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
+    PixelsCollection::grey_scale_into_black(image.bytes.to_mut(), 200);
 
     let threshold_black_chars_transparent_background = image.try_create_char_collection(
         6,

@@ -6,6 +6,7 @@ pub mod bgra_management;
 pub mod legacy;
 pub mod pixels;
 pub mod screen;
+pub mod zero_copy_screen;
 
 pub use screen::*;
 

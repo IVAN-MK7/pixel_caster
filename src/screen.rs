@@ -47,9 +47,9 @@ pub struct ScreenArea {
 
 /// Screen is used to get/send color bytes from/to the screen in a straightforward way
 #[derive(Clone)]
-pub struct Screen<T: PixelValues<T> + Copy> {
+pub struct Screen<T: PixelValues<T> + Copy + 'static> {
     /// PixelsCollection containing color bytes data and info
-    pixels: PixelsCollection<T>,
+    pixels: PixelsCollection<'static, T>,
     screen_area: ScreenArea,
     win_api_screen: WindowsApiScreen,
     pixels_send_mode: PixelsSendMode,
@@ -110,25 +110,26 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
         }
     }
 
-    /// Returns a reference to its PixelsCollection's bytes Vec
-    pub fn get_bytes(&self) -> &Vec<T> {
+    /// Returns a read-only slice of the pixels' color bytes.
+    pub fn get_bytes(&self) -> &[T] {
         &self.pixels.bytes
     }
 
-    /// Returns a reference to its PixelsCollection's bytes Vec
+    /// Returns a mutable reference to the underlying Vec,
+    /// cloning the data into a new Vec first if it was only borrowed.
     pub fn get_bytes_mut(&mut self) -> &mut Vec<T> {
-        &mut self.pixels.bytes
+        self.pixels.bytes.to_mut()
     }
 
     /// Returns a reference to its PixelsCollection
-    pub fn get_pixels_collection(&self) -> &PixelsCollection<T> {
+    pub fn get_pixels_collection(&self) -> &PixelsCollection<'static, T> {
         &self.pixels
     }
 
     /// Updates its PixelsCollection's bytes with the BGRA bytes of the Screen's set pixels area
     pub fn scan_area(&mut self) {
         Self::get_bytes_from_screen(
-            self.pixels.bytes.as_mut_ptr() as *mut c_void,
+            self.pixels.bytes.to_mut().as_mut_ptr() as *mut c_void,
             self.screen_area.upperleftcorner_x,
             self.screen_area.upperleftcorner_y,
             self.screen_area.width,
@@ -136,6 +137,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             &self.win_api_screen,
         )
     }
+
     /// Updates self.pixels.bytes.
     /// # Safety
     ///
@@ -145,7 +147,7 @@ impl<T: PixelValues<T> + Copy> Screen<T> {
             let const_ptr = self as *const Self;
             let mut_ptr = const_ptr as *mut Self;
             Self::get_bytes_from_screen(
-                (*mut_ptr).pixels.bytes.as_mut_ptr() as *mut c_void,
+                (*mut_ptr).pixels.bytes.to_mut().as_mut_ptr() as *mut c_void,
                 self.screen_area.upperleftcorner_x,
                 self.screen_area.upperleftcorner_y,
                 self.screen_area.width,

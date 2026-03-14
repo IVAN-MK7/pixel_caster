@@ -69,7 +69,7 @@ pub trait ColorAlteration<T: PixelValues<T>> {
     fn alpha_not_max_clear_color(&mut self, alpha_pos_in_byte: usize);
 }
 
-impl ColorAlteration<u8> for Vec<u8> {
+impl ColorAlteration<u8> for [u8] {
     fn set_bgr(&mut self, b: u8, g: u8, r: u8) {
         let mut i = 0;
         for _ in 0..(self.len() / 4) {

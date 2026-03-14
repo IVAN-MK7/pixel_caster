@@ -110,21 +110,28 @@ fn string_of_chars() {
                 (values.right_x, img_visible_range.top_y),
                 (values.right_x, img_visible_range.bottom_y),
             ];
-            bytes_chars_poles.set_positions_bgra(height, &vec_pos_char, 0, 255, 0, 255);
+            bytes_chars_poles.to_mut().set_positions_bgra(height, &vec_pos_char, 0, 255, 0, 255);
             let vec_pos_char_strict = vec![
                 (values.left_x, values.top_y),
                 (values.left_x, values.bottom_y),
                 (values.right_x, values.top_y),
                 (values.right_x, values.bottom_y),
             ];
-            bytes_chars_poles.set_positions_bgra(height, &vec_pos_char_strict, 170, 255, 170, 255);
+            bytes_chars_poles.to_mut().set_positions_bgra(
+                height,
+                &vec_pos_char_strict,
+                170,
+                255,
+                170,
+                255,
+            );
             let vec_addresses_char = vec![
                 values.top_y_index,
                 values.left_x_index,
                 values.right_x_index,
                 values.bottom_y_index,
             ];
-            bytes_chars_poles.set_addresses_bgra(&vec_addresses_char, 0, 0, 255, 255);
+            bytes_chars_poles.to_mut().set_addresses_bgra(&vec_addresses_char, 0, 0, 255, 255);
             crate::Screen::update_area_custom(
                 &bytes_chars_poles,
                 0,
@@ -206,14 +213,14 @@ fn string_of_chars() {
             (img_visible_range.right_x, img_visible_range.top_y),
             (img_visible_range.right_x, img_visible_range.bottom_y),
         ];
-        bytes_chars_poles.set_positions_bgra(height, &vec_pos_string, 255, 255, 0, 255);
+        bytes_chars_poles.to_mut().set_positions_bgra(height, &vec_pos_string, 255, 255, 0, 255);
         let vec_addresses_string = vec![
             img_visible_range.top_y_index,
             img_visible_range.left_x_index,
             img_visible_range.right_x_index,
             img_visible_range.bottom_y_index,
         ];
-        bytes_chars_poles.set_addresses_bgra(&vec_addresses_string, 255, 0, 255, 255);
+        bytes_chars_poles.to_mut().set_addresses_bgra(&vec_addresses_string, 255, 0, 255, 255);
         crate::Screen::update_area_custom(
             &bytes_chars_poles,
             0,
@@ -338,21 +345,28 @@ fn string_of_chars_with_highest_char_sides() {
                 (values.right_x, img_visible_range.top_y),
                 (values.right_x, img_visible_range.bottom_y),
             ];
-            bytes_chars_poles.set_positions_bgra(height, &vec_pos_char, 0, 255, 0, 255);
+            bytes_chars_poles.to_mut().set_positions_bgra(height, &vec_pos_char, 0, 255, 0, 255);
             let vec_pos_char_strict = vec![
                 (values.left_x, values.top_y),
                 (values.left_x, values.bottom_y),
                 (values.right_x, values.top_y),
                 (values.right_x, values.bottom_y),
             ];
-            bytes_chars_poles.set_positions_bgra(height, &vec_pos_char_strict, 170, 255, 170, 255);
+            bytes_chars_poles.to_mut().set_positions_bgra(
+                height,
+                &vec_pos_char_strict,
+                170,
+                255,
+                170,
+                255,
+            );
             let vec_addresses_char = vec![
                 values.top_y_index,
                 values.left_x_index,
                 values.right_x_index,
                 values.bottom_y_index,
             ];
-            bytes_chars_poles.set_addresses_bgra(&vec_addresses_char, 0, 0, 255, 255);
+            bytes_chars_poles.to_mut().set_addresses_bgra(&vec_addresses_char, 0, 0, 255, 255);
 
             highest_height =
                 std::cmp::max(highest_height, char_values.bottom_y - char_values.top_y);
@@ -392,7 +406,7 @@ fn string_of_chars_with_highest_char_sides() {
                 (values.left_x - 2, values.bottom_y - highest_height),
                 (values.right_x + 2, values.bottom_y - highest_height),
             ];
-            bytes_chars_poles.set_positions_bgra(
+            bytes_chars_poles.to_mut().set_positions_bgra(
                 height,
                 &heighest_char_top_from_this_char_bottom_side_marks,
                 161,

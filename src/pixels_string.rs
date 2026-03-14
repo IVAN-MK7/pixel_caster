@@ -13,7 +13,7 @@ mod tests;
 pub use crate::PixelsCollection;
 
 pub struct CharsCollectionCreator<'a> {
-    pixels_collection: &'a PixelsCollection<u8>,
+    pixels_collection: &'a PixelsCollection<'a, u8>,
     start_x: usize,
     start_y: usize,
     range_x: usize,
@@ -400,9 +400,9 @@ pub fn pixels_from_area(
 }
 
 /// Additional implementations that enables .png importing and CharsCollection creation
-impl PixelsCollection<u8> {
+impl<'a> PixelsCollection<'a, u8> {
     /// Creates a new instance from a .png (resulting color bytes will be BGRA ordered)
-    pub fn from_png(png_path: &str) -> Result<PixelsCollection<u8>, String> {
+    pub fn from_png(png_path: &str) -> Result<PixelsCollection<'static, u8>, String> {
         // get Vec<u8> from .png and load it to a .png format, png works in RGBA, to make it usable it will be converted into BGRA
         match crate::pixels_string::png_into_pixels_collection(png_path) {
             Ok(mut pixel_coll) => {
@@ -446,9 +446,9 @@ impl PixelsCollection<u8> {
     }
 }
 
-impl PixelsCollection<u32> {
+impl<'a> PixelsCollection<'a, u32> {
     /// Creates a new instance from a .png (resulting color bytes will be BGRA ordered)
-    pub fn from_png(png_path: &str) -> Result<PixelsCollection<u32>, String> {
+    pub fn from_png(png_path: &str) -> Result<PixelsCollection<'_, u32>, String> {
         // get Vec<u8> from .png and load it to a .png format, png works in RGBA, to make it usable it will be converted into BGRA
         match crate::pixels_string::png_into_pixels_collection(png_path) {
             Ok(mut pixel_coll) => {
@@ -465,7 +465,7 @@ impl PixelsCollection<u32> {
 }
 
 /// Gets a Vec<u8> in RGBA values from a .png
-pub fn png_into_pixels_collection(png_path: &str) -> Result<PixelsCollection<u8>, String> {
+pub fn png_into_pixels_collection(png_path: &str) -> Result<PixelsCollection<'static, u8>, String> {
     match image::open(png_path) {
         Ok(img) => Ok(PixelsCollection::<u8>::create(
             img.width() as usize,
@@ -503,10 +503,10 @@ pub fn create_dir_recursive(dir_full_path: &str) -> std::io::Result<()> {
 
 /// Character name, the char it refers to and its PixelsCollection
 #[derive(Clone)]
-pub struct PixelsChar<T: PixelValues<T>> {
+pub struct PixelsChar<T: PixelValues<T> + Clone + 'static> {
     pub char: char,
     pub char_name: String,
-    pub pixels: PixelsCollection<T>,
+    pub pixels: PixelsCollection<'static, T>,
 }
 
 impl PixelsChar<u8> {
@@ -538,7 +538,7 @@ impl PixelsChar<u8> {
     }
 
     pub fn switch_bytes(&mut self, i1: usize, i2: usize) {
-        <u8>::switch_bytes(&mut self.pixels.bytes, i1, i2);
+        <u8>::switch_bytes(self.pixels.bytes.to_mut(), i1, i2);
     }
 }
 
@@ -552,7 +552,7 @@ impl<T: Copy + Clone> BGRA<T> {
 
 /// Collection of PixelsChar
 #[derive(Clone)]
-pub struct CharsCollection<T: PixelValues<T> + Copy + Clone> {
+pub struct CharsCollection<T: PixelValues<T> + Copy + Clone + 'static> {
     pub chars: Vec<PixelsChar<T>>,
     pub path: String,
     pub bgra: BGRA<T>,
@@ -643,7 +643,7 @@ impl CharsCollection<u8> {
     /// Every grey below a threshold set to black, else to invisible
     pub fn grey_scale_into_black(&mut self, grey_threshold: u8) {
         for v in &mut self.chars {
-            PixelsCollection::grey_scale_into_black(&mut v.pixels.bytes, grey_threshold);
+            PixelsCollection::grey_scale_into_black(v.pixels.bytes.to_mut(), grey_threshold);
         }
     }
     /// If a BGRA combination is met, set it to a provided BGRA
@@ -659,7 +659,7 @@ impl CharsCollection<u8> {
         new_a: u8,
     ) {
         for v in &mut self.chars {
-            v.pixels.bytes.color_matcher_and_new_color(
+            v.pixels.bytes.to_mut().color_matcher_and_new_color(
                 |v0: u8, v1: u8, v2: u8, v3: u8| -> bool {
                     v0 == b && v1 == g && v2 == r && v3 == a
                 },
@@ -677,7 +677,7 @@ impl CharsCollection<u8> {
     /// If a color's Alpha matches, set its BGR values
     pub fn alpha_match_set_bgr(&mut self, a: u8, b: u8, g: u8, r: u8) {
         self.chars.iter_mut().for_each(|x| {
-            x.pixels.bytes.color_matcher_and_new_color(
+            x.pixels.bytes.to_mut().color_matcher_and_new_color(
                 |_: u8, _: u8, _: u8, v3: u8| -> bool { v3 == a },
                 b,
                 g,
@@ -690,14 +690,14 @@ impl CharsCollection<u8> {
 
     /// Set the provided BGR
     pub fn set_bgr(&mut self, b: u8, g: u8, r: u8) {
-        self.chars.iter_mut().for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
+        self.chars.iter_mut().for_each(|x| x.pixels.bytes.to_mut().set_bgr(b, g, r));
         self.bgra = BGRA(b, g, r, self.bgra.3);
     }
 
     /// Set the provided BGR
     pub fn set_bgr_from_array(&mut self, bgr: [u8; 3]) {
         let (b, g, r) = (bgr[0], bgr[1], bgr[2]);
-        self.chars.iter_mut().for_each(|x| x.pixels.bytes.set_bgr(b, g, r));
+        self.chars.iter_mut().for_each(|x| x.pixels.bytes.to_mut().set_bgr(b, g, r));
         self.bgra = BGRA(b, g, r, self.bgra.3);
     }
 
@@ -779,7 +779,7 @@ impl CharsCollection<u8> {
 #[derive(Clone)]
 pub struct PixelsString {
     pub bgra: BGRA<u8>,
-    pub pixels: PixelsCollection<u8>,
+    pub pixels: PixelsCollection<'static, u8>,
 }
 
 /// Returns Some(the first Key that has the provided Value), otherwise None

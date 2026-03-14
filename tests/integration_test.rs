@@ -3,6 +3,7 @@
 use serial_test::serial;
 
 use pixel_caster::bgra_management::{SwitchBytes, bytes_matchers};
+use pixel_caster::zero_copy_screen::ZeroCopyScreen;
 use pixel_caster::{PixelsCollection, pixels_string::*, *};
 
 #[test]
@@ -116,7 +117,7 @@ fn png_to_char_collection() {
         "fonts/opaque_grey_scale_12px_chars_sample__white_background.png",
     )
     .unwrap();
-    PixelsCollection::grey_scale_into_black(&mut image.bytes, 200);
+    PixelsCollection::grey_scale_into_black(image.bytes.to_mut(), 200);
 
     let threshold_black_chars_transparent_background = image.try_create_char_collection(
         6,
@@ -322,6 +323,24 @@ fn copy_and_paste_pixels_slimmed() {
         screen_u8.get_bytes()[2],
         screen_u8.get_bytes()[3]
     );
+
+    let zero_copy_screen =
+        unsafe { ZeroCopyScreen::new(pixels_width as i32, pixels_height as i32) };
+
+    unsafe {
+        zero_copy_screen.capture(80, 2);
+    }
+
+    let pixels = unsafe { zero_copy_screen.as_slice() };
+
+    let bgra_slice = &pixels[0..4];
+    println!("zero_copy_screen.bytes: first value: {:?}, length: {}", bgra_slice, bgra_slice.len());
+    println!(
+        "zero_copy_screen.bytes: first pixel's values: B:{} G:{} R:{} A:{}",
+        bgra_slice[0], bgra_slice[1], bgra_slice[2], bgra_slice[3]
+    );
+
+    assert_eq!(screen_u8.get_bytes()[0..4], *bgra_slice);
 
     // u32 Screen variant (the variant can also be specified using the turbofish ::<>, as in this case)
     let mut screen_u32 = Screen::<u32>::new(80, 2, 4, 1);
