@@ -413,38 +413,36 @@ impl<'a> PixelsCollection<'a, u8> {
 
     /// Returns a new PixelsCollection from the provided one, scaling based on the provided ResizeSize (either width or hight)
     pub fn create_new_resized(&self, resize_size: ResizeSize) -> PixelsCollection<'a, u8> {
-        let new_height;
-        let new_width;
-
-        match resize_size {
+        let (new_width, new_height) = match resize_size {
             ResizeSize::Width(w) => {
                 if self.width == w {
                     return self.clone();
                 }
-                new_width = w;
-                new_height = (new_width * self.height) / self.width;
+                (w, (w as f32 * self.height as f32 / self.width as f32).round() as usize)
             }
             ResizeSize::Height(h) => {
                 if self.height == h {
                     return self.clone();
                 }
-                new_height = h;
-                new_width = (new_height * self.width) / self.height;
+                ((h as f32 * self.width as f32 / self.height as f32).round() as usize, h)
             }
-        }
+        };
 
-        let x_ratio: f32 = self.width as f32 / new_width as f32;
+        let x_ratio = self.width as f32 / new_width as f32;
         let y_ratio: f32 = self.height as f32 / new_height as f32;
+        let units_per_pixel = self.units_per_pixel as usize;
 
-        let mut bytes_resized = Vec::<u8>::with_capacity(new_width * new_height * 4);
+        let mut bytes_resized = Vec::<u8>::with_capacity(new_width * new_height * units_per_pixel);
         for fy in 0..new_height {
+            let src_y = ((fy as f32 * y_ratio).round() as usize).min(self.height.saturating_sub(1));
+            let src_row_offset = src_y * self.row_length;
             for fx in 0..new_width {
-                let pixel_needed = self.row_length * (fy as f32 * y_ratio) as usize
-                    + 4 * (fx as f32 * x_ratio) as usize;
-                bytes_resized.push(self.bytes[pixel_needed]);
-                bytes_resized.push(self.bytes[pixel_needed + 1]);
-                bytes_resized.push(self.bytes[pixel_needed + 2]);
-                bytes_resized.push(self.bytes[pixel_needed + 3]);
+                let src_x =
+                    ((fx as f32 * x_ratio).round() as usize).min(self.width.saturating_sub(1));
+
+                let pixel_needed = src_row_offset + (src_x * units_per_pixel);
+                bytes_resized
+                    .extend_from_slice(&self.bytes[pixel_needed..pixel_needed + units_per_pixel]);
             }
         }
 
